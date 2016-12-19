@@ -22,7 +22,6 @@ var options = do.M{
 }
 
 func tasks(p *do.Project) {
-
 	p.Task("build", nil, func(c *do.Context) {
 		c.Run("GOOS=linux GOARCH=386 go build")
 	})
