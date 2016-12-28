@@ -12,6 +12,16 @@ type MrBoard struct {
 	e *edison.EdisonAdaptor
 }
 
+type row [8]bool
+
+func (r row) reversed() (reversed row) {
+	for i, v := range r {
+		reversed[len(reversed)-i-1] = v
+	}
+
+	return
+}
+
 func checkError(err error) {
 	if err != nil {
 		// log.Fatal(err)
@@ -21,9 +31,9 @@ func checkError(err error) {
 }
 
 // convert from byte object to boolean array
-func byte2BoolArray(b byte) (arr [8]bool) {
+func byte2Row(b byte) (r row) {
 	for i := 0; i < 8; i++ {
-		arr[i] = (b&0x01 == 0x01)
+		r[i] = (b&0x01 == 0x01)
 		b >>= 1
 	}
 
@@ -90,7 +100,7 @@ func (b *MrBoard) Init() {
 }
 
 // read given y line
-func (b *MrBoard) readLine(y int) (bits [8]bool) {
+func (b *MrBoard) readLine(y int) (r row) {
 	addr, gpio := y2AddrAndGpio(y)
 
 	b.e.I2cStart(addr)
@@ -101,13 +111,16 @@ func (b *MrBoard) readLine(y int) (bits [8]bool) {
 	data, err := b.e.I2cRead(addr, 1)
 	checkError(err)
 
-	bits = byte2BoolArray(data[0])
+	r = byte2Row(data[0])
+	if y%2 == 0 {
+		r = r.reversed()
+	}
 
 	return
 }
 
 // read both A and B bits of given address of the Expander
-func (b MrBoard) readAB(addr int) (bitsSet [2][8]bool) {
+func (b MrBoard) readAB(addr int) (byteSet [2]row) {
 	b.e.I2cStart(addr)
 
 	err := b.e.I2cWrite(addr, []byte{GPIOA})
@@ -116,37 +129,37 @@ func (b MrBoard) readAB(addr int) (bitsSet [2][8]bool) {
 	data, err := b.e.I2cRead(addr, 2)
 	checkError(err)
 
-	bitsSet[0] = byte2BoolArray(data[0])
-	bitsSet[1] = byte2BoolArray(data[1])
+	byteSet[0] = byte2Row(data[0]).reversed()
+	byteSet[1] = byte2Row(data[1])
 
 	return
 }
 
 // ReadWholeBoard returns whole board status
-func (b *MrBoard) ReadWholeBoard() (bitsSet [8][8]bool) {
+func (b *MrBoard) readWholeBoard() (byteSet [8]row) {
 	for i, addr := range EXIA {
 		data := b.readAB(addr)
 
-		bitsSet[2*i] = data[0]
-		bitsSet[2*i+1] = data[1]
+		byteSet[2*i] = data[0].reversed()
+		byteSet[2*i+1] = data[1]
 	}
 
 	return
 }
 
 // write byte data to designated line
-func (b *MrBoard) writeBits(y int, bits byte) {
+func (b *MrBoard) writeByte(y int, v byte) {
 	addr, gpio := y2AddrAndGpio(y)
 
 	b.e.I2cStart(addr)
 
-	data := []byte{byte(gpio), bits}
+	data := []byte{byte(gpio), v}
 	b.e.I2cWrite(addr, data)
 }
 
 func (b *MrBoard) writeAllLow() {
 	for y := 0; y < 8; y++ {
-		b.writeBits(y, 0x00)
+		b.writeByte(y, 0x00)
 	}
 }
 
@@ -154,9 +167,9 @@ func (b *MrBoard) writeAllLow() {
 func (b *MrBoard) HighWhile(x int, y int, ms time.Duration) {
 	bits := byte(0x01 << uint(x))
 
-	b.writeBits(y, bits)
+	b.writeByte(y, bits)
 
 	time.Sleep(ms * time.Millisecond)
 
-	b.writeBits(y, 0x00)
+	b.writeByte(y, 0x00)
 }
