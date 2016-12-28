@@ -147,6 +147,27 @@ func (b *MrBoard) readWholeBoard() (byteSet [8]row) {
 	return
 }
 
+// GetInput waits until board state changes and return x, y
+func (b *MrBoard) GetInput() (int, int) {
+	old := b.readWholeBoard()
+	for {
+		crr := b.readWholeBoard()
+
+		if crr != old {
+			for i, r := range crr {
+				for j, v := range r {
+					// if current status is True and old status is False then reutrn (x, y)
+					if v && !old[i][j] {
+						return j, i
+					}
+				}
+			}
+		}
+
+		time.Sleep(POLLTIME)
+	}
+}
+
 // write byte data to designated line
 func (b *MrBoard) writeByte(y int, v byte) {
 	addr, gpio := y2AddrAndGpio(y)
@@ -164,7 +185,7 @@ func (b *MrBoard) writeAllLow() {
 }
 
 // HighWhile make (x, y) to High while ms[msec]
-func (b *MrBoard) HighWhile(x int, y int, ms time.Duration) {
+func (b *MrBoard) highWhile(x int, y int, ms time.Duration) {
 	bits := byte(0x01 << uint(x))
 
 	b.writeByte(y, bits)
@@ -172,4 +193,9 @@ func (b *MrBoard) HighWhile(x int, y int, ms time.Duration) {
 	time.Sleep(ms * time.Millisecond)
 
 	b.writeByte(y, 0x00)
+}
+
+// Flip flips a stone at (x, y)
+func (b *MrBoard) Flip(x int, y int) {
+	b.highWhile(x, y, FLIPTIME)
 }
