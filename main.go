@@ -1,32 +1,23 @@
 package main
 
 import (
+	"log"
 	"time"
 
-	"github.com/hybridgroup/gobot"
-	"github.com/hybridgroup/gobot/platforms/gpio"
-	"github.com/hybridgroup/gobot/platforms/intel-iot/edison"
+	"github.com/69guitar1015/MagicReversi/mrmiddle"
 )
 
 func main() {
-	gbot := gobot.NewGobot()
+	b := mrmiddle.NewMrBoard()
+	b.Init()
 
-	e := edison.NewEdisonAdaptor("edison")
-	led := gpio.NewLedDriver(e, "led", "13")
+	for {
+		ret := b.ReadWholeBoard()
 
-	work := func() {
-		gobot.Every(100*time.Millisecond, func() {
-			led.Toggle()
-		})
+		for _, bits := range ret {
+			log.Println(bits)
+		}
+
+		time.Sleep(time.Second)
 	}
-
-	robot := gobot.NewRobot("blinkBot",
-		[]gobot.Connection{e},
-		[]gobot.Device{led},
-		work,
-	)
-
-	gbot.AddRobot(robot)
-
-	gbot.Start()
 }
