@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"testing"
@@ -15,7 +16,11 @@ type dammyMiddleware struct {
 	r [][2]int
 }
 
-func (m *dammyMiddleware) GetInput() (x int, y int) {
+func (m *dammyMiddleware) GetInput() (x int, y int, err error) {
+	if len(m.r) <= m.t {
+		return 0, 0, errors.New("End of Input")
+	}
+
 	n := m.r[m.t]
 	m.t++
 
@@ -24,8 +29,14 @@ func (m *dammyMiddleware) GetInput() (x int, y int) {
 	return
 }
 
-func (m *dammyMiddleware) Flip(x int, y int, pd mrmiddle.Pole) {
+func (m *dammyMiddleware) Flip(x int, y int, pd mrmiddle.Pole) (err error) {
+	if x < 1 || 8 < x || y < 1 || 8 < y {
+		return errors.New("Can't put stones there")
+	}
+
 	fmt.Printf("Flip to %s at (x, y) = (%d, %d)\n", map[mrmiddle.Pole]string{mrmiddle.N: "N", mrmiddle.S: "S"}[pd], x, y)
+
+	return
 }
 
 func TestMain(t *testing.T) {
