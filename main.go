@@ -249,7 +249,33 @@ func (g *game) printBoard() {
 
 // print the game summary
 func (g *game) printSummary() {
-	fmt.Println("this is SUMMARY")
+	fmt.Println("##################################################")
+	fmt.Println("")
+	fmt.Println("SUMMARY")
+
+	counts := map[state]int{BLACK: 0, WHITE: 0, NONE: 0}
+
+	for i := 0; i <= 8; i++ {
+		for j := 0; j <= 8; j++ {
+			counts[g.b[i][j]]++
+		}
+	}
+
+	switch {
+	case counts[BLACK] == counts[WHITE]:
+		fmt.Println("DRAW")
+	case counts[BLACK] > counts[WHITE]:
+		fmt.Println("BLACK PLAYER WINS!")
+	case counts[BLACK] < counts[WHITE]:
+		fmt.Println("WHITE PLAYER WINS")
+	}
+
+	fmt.Printf("NUMBER OF BLACK STONE:\t%2d\n", counts[BLACK])
+	fmt.Printf("NUMBER OF WHITE STONE:\t%2d\n", counts[WHITE])
+	fmt.Printf("NUMBER OF BLANK SPACE:\t%2d\n", counts[NONE])
+
+	fmt.Println("")
+	fmt.Println("##################################################")
 }
 
 func main() {
