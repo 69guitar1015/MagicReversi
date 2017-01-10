@@ -62,8 +62,8 @@ func (b *board) flip(p point) {
 
 // reversi middleware interface
 type middleware interface {
-	GetInput() (int, int)
-	Flip(int, int, mrmiddle.Pole)
+	GetInput() (int, int, error)
+	Flip(int, int, mrmiddle.Pole) error
 }
 
 // game is main reversi game object
@@ -122,7 +122,12 @@ func (g *game) start() (err error) {
 			continue
 		}
 
-		x, y := g.m.GetInput()
+		x, y, err := g.m.GetInput()
+
+		if err != nil {
+			log.Fatal()
+		}
+
 		p := point{x, y}
 
 		err = g.put(p)
@@ -200,7 +205,11 @@ func (g *game) put(p point) (err error) {
 				// simulational flip
 				g.b.flip(dp)
 				// physical flip
-				g.m.Flip(dp[0], dp[1], g.crr.color().pole())
+				err = g.m.Flip(dp[0], dp[1], g.crr.color().pole())
+
+				if err != nil {
+					return
+				}
 			} else {
 				return errors.New("Can't available this direction")
 			}
@@ -281,14 +290,20 @@ func (g *game) printSummary() {
 	fmt.Println("##################################################")
 }
 
-func main() {
-	m := mrmiddle.NewMrMiddle()
-
-	g := newGame(m)
-
-	err := g.start()
-
+func checkError(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func main() {
+	m, err := mrmiddle.NewMrMiddle()
+
+	checkError(err)
+
+	g := newGame(m)
+
+	err = g.start()
+
+	checkError(err)
 }
