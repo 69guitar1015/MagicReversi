@@ -27,6 +27,21 @@ func (s state) pole() mrmiddle.Pole {
 	return mrmiddle.Pole(s)
 }
 
+func (s state) String() string {
+	switch s {
+	case BLACK:
+		return "BLACK"
+	case WHITE:
+		return "WHITE"
+	case NONE:
+		return "NONE"
+	case WALL:
+		return "WALL"
+	default:
+		return "UNKNOWN"
+	}
+}
+
 type player int
 
 func (p player) enemy() player {
@@ -35,6 +50,17 @@ func (p player) enemy() player {
 
 func (p player) color() state {
 	return state(p)
+}
+
+func (p player) String() string {
+	switch p {
+	case BLACK:
+		return "BLACK"
+	case WHITE:
+		return "WHITE"
+	default:
+		return "UNKNOWN"
+	}
 }
 
 type point [2]int
@@ -66,6 +92,13 @@ type middleware interface {
 	Flip(int, int, mrmiddle.Pole) error
 }
 
+// single record of put history
+type putRecord struct {
+	pt point
+	pl player
+	fl []point
+}
+
 // game is main reversi game object
 type game struct {
 	// board object
@@ -74,8 +107,8 @@ type game struct {
 	crr player
 	// middleware object
 	m middleware
-	// history of putting stone
-	record map[point]player
+	// history of put stone
+	history []putRecord
 	// available points
 	available map[point][]direction
 }
@@ -96,7 +129,7 @@ func newGame(m middleware) (g *game) {
 		},
 		crr:       BLACK,
 		m:         m,
-		record:    map[point]player{},
+		history:   []putRecord{},
 		available: map[point][]direction{},
 	}
 
@@ -189,6 +222,12 @@ func (g *game) put(p point) (err error) {
 		return errors.New("Can't put stones there")
 	}
 
+	pr := putRecord{
+		pt: p,
+		pl: g.crr,
+		fl: []point{},
+	}
+
 	err = g.b.put(p, g.crr.color())
 
 	if err != nil {
@@ -210,6 +249,9 @@ func (g *game) put(p point) (err error) {
 				if err != nil {
 					return
 				}
+
+				// append to flip record
+				pr.fl = append(pr.fl, dp)
 			} else {
 				return errors.New("Can't available this direction")
 			}
@@ -218,7 +260,7 @@ func (g *game) put(p point) (err error) {
 		}
 	}
 
-	g.record[p] = g.crr
+	g.history = append(g.history, pr)
 
 	return
 }
@@ -264,7 +306,7 @@ func (g *game) printBoard() {
 
 // print the game summary
 func (g *game) printSummary() {
-	fmt.Println("# SUMMARY ########################################")
+	fmt.Println("# SUMMARY ###########################################################")
 
 	counts := map[state]int{BLACK: 0, WHITE: 0, NONE: 0}
 
@@ -277,17 +319,23 @@ func (g *game) printSummary() {
 	switch {
 	case counts[BLACK] == counts[WHITE]:
 		fmt.Println("DRAW")
-	case counts[BLACK] > counts[WHITE]:
-		fmt.Println("BLACK PLAYER WINS!")
-	case counts[BLACK] < counts[WHITE]:
-		fmt.Println("WHITE PLAYER WINS")
+	default:
+		fmt.Printf("%s PLAYER WINS!\n", player(BLACK))
 	}
 
 	fmt.Printf("NUMBER OF BLACK STONE:\t%2d\n", counts[BLACK])
 	fmt.Printf("NUMBER OF WHITE STONE:\t%2d\n", counts[WHITE])
 	fmt.Printf("NUMBER OF BLANK SPACE:\t%2d\n", counts[NONE])
 
-	fmt.Println("##################################################")
+	fmt.Printf("\n# KIFU\n")
+	for i, record := range g.history {
+		fmt.Printf("[%2d]\t(%d, %d)\t%s\t", i+1, record.pt[0], record.pt[1], record.pl)
+		if (i+1)%3 == 0 {
+			fmt.Printf("\n")
+		}
+	}
+
+	fmt.Println("#####################################################################")
 }
 
 func checkError(err error) {
