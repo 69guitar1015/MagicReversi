@@ -198,6 +198,6 @@ func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration) {
 }
 
 // Flip flips a stone at (x, y)
-func (mm *MrMiddle) Flip(x int, y int) {
+func (mm *MrMiddle) Flip(x int, y int, pd Pole) {
 	mm.highWhile(x, y, FLIPTIME)
 }
