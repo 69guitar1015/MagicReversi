@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/69guitar1015/MagicReversi/mrmiddle"
 )
@@ -105,7 +107,7 @@ func newGame(m middleware) (g *game) {
 
 func (g *game) start() (err error) {
 	for {
-		g.printBoard()
+		// g.printBoard()
 
 		g.setAvailable()
 
@@ -135,9 +137,47 @@ func (g *game) start() (err error) {
 	}
 }
 
+// seek direction
+func (g *game) seekDirection(ch chan []interface{}, wg *sync.WaitGroup, p point) {
+	defer wg.Done()
+
+	dirs := []direction{}
+
+	x, y := p[0], p[1]
+
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			if dx == 0 && dy == 0 {
+				continue
+			}
+
+			if g.b[y+dy][x+dx] == g.crr.enemy().color() {
+				dist := 2
+				for {
+					if g.b[y+dist*dy][x+dist*dx] == g.crr.color() {
+						dirs = append(dirs, direction{dx, dy})
+						break
+					} else if g.b[y+dist*dy][x+dist*dx] == g.crr.enemy().color() {
+						dist++
+					} else {
+						break
+					}
+				}
+			}
+		}
+	}
+
+	ch <- []interface{}{p, dirs}
+}
+
 // seek available point
 func (g *game) seekAvailable() map[point][]direction {
 	available := map[point][]direction{}
+
+	start := time.Now()
+
+	ch := make(chan []interface{})
+	wg := new(sync.WaitGroup)
 
 	for y := 1; y <= 8; y++ {
 		for x := 1; x <= 8; x++ {
@@ -145,30 +185,34 @@ func (g *game) seekAvailable() map[point][]direction {
 				continue
 			}
 
-			for dy := -1; dy <= 1; dy++ {
-				for dx := -1; dx <= 1; dx++ {
-					if dx == 0 && dy == 0 {
-						continue
-					}
+			wg.Add(1)
 
-					if g.b[y+dy][x+dx] == g.crr.enemy().color() {
-						dist := 2
-						for {
-							if g.b[y+dist*dy][x+dist*dx] == g.crr.color() {
-								p := point{x, y}
-								available[p] = append(available[p], direction{dx, dy})
-								break
-							} else if g.b[y+dist*dy][x+dist*dx] == g.crr.enemy().color() {
-								dist++
-							} else {
-								break
-							}
-						}
-					}
-				}
-			}
+			go g.seekDirection(ch, wg, point{x, y})
+
 		}
 	}
+
+	fmt.Println("waiting....")
+	done := make(chan bool)
+	go func() {
+		wg.Wait()
+		done <- true
+	}()
+
+	for {
+		select {
+		case receive := <-ch:
+			p := receive[0].(point)
+			dirs := receive[1].([]direction)
+			available[p] = dirs
+		case <-done:
+			goto seekend
+		}
+	}
+seekend:
+
+	end := time.Now()
+	fmt.Printf("seek time: %f[s]\n", end.Sub(start).Seconds())
 
 	return available
 }
@@ -180,7 +224,6 @@ func (g *game) setAvailable() {
 // put a stone to (x, y) address on the board
 func (g *game) put(p point) (err error) {
 	// return error if the point is not available
-	fmt.Println(g.available, p)
 	if len(g.available[p]) == 0 {
 		return errors.New("Can't put stones there")
 	}
