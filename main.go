@@ -180,7 +180,6 @@ func (g *game) setAvailable() {
 // put a stone to (x, y) address on the board
 func (g *game) put(p point) (err error) {
 	// return error if the point is not available
-	fmt.Println(g.available, p)
 	if len(g.available[p]) == 0 {
 		return errors.New("Can't put stones there")
 	}
@@ -198,7 +197,10 @@ func (g *game) put(p point) (err error) {
 			if g.b[dp[1]][dp[0]] == g.crr.color() {
 				break
 			} else if g.b[dp[1]][dp[0]] == g.crr.enemy().color() {
+				// simulational flip
 				g.b.flip(dp)
+				// physical flip
+				g.m.Flip(dp[0], dp[1], g.crr.color().pole())
 			} else {
 				return errors.New("Can't available this direction")
 			}
