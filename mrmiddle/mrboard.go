@@ -160,7 +160,7 @@ func (mm *MrMiddle) GetInput() (int, int) {
 				for j, v := range r {
 					// if current status is True and old status is False then reutrn (x, y)
 					if v && !old[i][j] {
-						return j, i
+						return j + 1, i + 1
 					}
 				}
 			}
@@ -172,7 +172,7 @@ func (mm *MrMiddle) GetInput() (int, int) {
 
 // write byte data to designated line
 func (mm *MrMiddle) writeByte(y int, v byte) {
-	addr, gpio := y2AddrAndGpio(y)
+	addr, gpio := y2AddrAndGpio(y - 1)
 
 	mm.e.I2cStart(addr)
 
@@ -188,7 +188,7 @@ func (mm *MrMiddle) writeAllLow() {
 
 // HighWhile make (x, y) to High while ms[msec]
 func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration) {
-	bits := byte(0x01 << uint(x))
+	bits := byte(0x01 << uint(x-1))
 
 	mm.writeByte(y, bits)
 
