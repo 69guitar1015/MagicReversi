@@ -16,6 +16,12 @@ type dammyMiddleware struct {
 	r [][2]int
 }
 
+func (m *dammyMiddleware) Init() (err error) {
+	fmt.Println("Initializing...")
+
+	return
+}
+
 func (m *dammyMiddleware) GetInput() (x int, y int, err error) {
 	if len(m.r) <= m.t {
 		return 0, 0, errors.New("End of Input")
