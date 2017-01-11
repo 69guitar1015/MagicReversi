@@ -59,6 +59,17 @@ var EXIA = [4]int{0x20, 0x21, 0x22, 0x23}
 var EXOA = [4]int{0x24, 0x25, 0x26, 0x27}
 
 //
+//	Driver IC CONFIGS
+//
+
+const (
+	// IN1 is IN1 pin
+	IN1 = "13"
+	// IN2 is IN2 pin
+	IN2 = "12"
+)
+
+//
 //	GENERAL CONFIGS
 //
 const (
@@ -69,7 +80,7 @@ const (
 	FLIPTIME = 500 * time.Millisecond
 )
 
-// Poll represents magnetic poll direction
+// Pole represents magnetic poll direction
 // N = 1 and S = -1
 type Pole int
 
