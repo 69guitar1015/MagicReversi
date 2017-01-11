@@ -389,6 +389,10 @@ func main() {
 
 	checkError(err)
 
+	err = m.Init()
+
+	checkError(err)
+
 	g := newGame(m)
 
 	err = g.start()
