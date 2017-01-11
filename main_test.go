@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"testing"
+
+	"github.com/69guitar1015/MagicReversi/mrmiddle"
 )
 
 type dammyMiddleware struct {
@@ -21,7 +23,7 @@ func (m *dammyMiddleware) GetInput() (x int, y int) {
 	return
 }
 
-func (m *dammyMiddleware) Flip(x int, y int) {
+func (m *dammyMiddleware) Flip(x int, y int, pd mrmiddle.Pole) {
 	// do nothing
 }
 
