@@ -170,15 +170,17 @@ func (g *game) start() (err error) {
 			if err != nil {
 				return fmt.Errorf("Failed to undo: %s", err)
 			}
-		} else {
-			err = g.put(p)
 
-			if err != nil {
-				return fmt.Errorf("Failed to put the stone: %s", err)
-			}
-
-			g.crr = g.crr.enemy()
+			continue
 		}
+
+		err = g.put(p)
+
+		if err != nil {
+			return fmt.Errorf("Failed to put the stone: %s", err)
+		}
+
+		g.crr = g.crr.enemy()
 	}
 }
 
