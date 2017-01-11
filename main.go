@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	b := mrmiddle.NewMrBoard()
-	b.Init()
+	mm := mrmiddle.NewMrMiddle()
+	mm.Init()
 
 	for {
-		ret := b.ReadWholeBoard()
+		ret := mm.ReadWholeBoard()
 
 		for _, bits := range ret {
 			log.Println(bits)
