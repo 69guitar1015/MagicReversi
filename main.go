@@ -88,6 +88,7 @@ func (b *board) flip(p point) {
 
 // reversi middleware interface
 type middleware interface {
+	Init() error
 	GetInput() (int, int, error)
 	Flip(int, int, mrmiddle.Pole) error
 }
