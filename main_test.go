@@ -26,6 +26,8 @@ func (m *dammyMiddleware) GetInput() (x int, y int, err error) {
 
 	x, y = n[0], n[1]
 
+	fmt.Printf("Get input (x, y) = (%d, %d)\n", x, y)
+
 	return
 }
 
@@ -96,6 +98,9 @@ func TestMain(t *testing.T) {
 			[2]int{7, 2},
 			[2]int{2, 7},
 			[2]int{4, 8},
+			[2]int{2, 8},
+			// undo here
+			[2]int{-1, -1},
 			[2]int{2, 8},
 			[2]int{4, 7},
 			[2]int{1, 8},
