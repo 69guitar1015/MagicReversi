@@ -49,7 +49,7 @@ func checkError(err error) bool {
 }
 
 func wrapError(err error) error {
-	return fmt.Errorf("Middleware Error :  ", err)
+	return fmt.Errorf("Middleware Error: %s", err)
 }
 
 // convert from byte object to boolean array
