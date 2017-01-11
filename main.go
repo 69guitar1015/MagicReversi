@@ -94,9 +94,9 @@ type middleware interface {
 
 // single record of put history
 type putRecord struct {
-	pt point
-	pl player
-	fl []point
+	pt    point
+	pl    player
+	flips []point
 }
 
 // game is main reversi game object
@@ -158,18 +158,27 @@ func (g *game) start() (err error) {
 		x, y, err := g.m.GetInput()
 
 		if err != nil {
-			log.Fatal()
+			return fmt.Errorf("Failed to get input: %s", err)
 		}
 
 		p := point{x, y}
 
-		err = g.put(p)
-		if err != nil {
-			return fmt.Errorf("Failed to put the stone: %s", err)
+		if p[0] == -1 && p[1] == -1 {
+			// undo when (x, y) == (-1, -1)
+			err = g.undo()
+
+			if err != nil {
+				return fmt.Errorf("Failed to undo: %s", err)
+			}
+		} else {
+			err = g.put(p)
+
+			if err != nil {
+				return fmt.Errorf("Failed to put the stone: %s", err)
+			}
+
+			g.crr = g.crr.enemy()
 		}
-
-		g.crr = g.crr.enemy()
-
 	}
 }
 
@@ -223,9 +232,9 @@ func (g *game) put(p point) (err error) {
 	}
 
 	pr := putRecord{
-		pt: p,
-		pl: g.crr,
-		fl: []point{},
+		pt:    p,
+		pl:    g.crr,
+		flips: []point{},
 	}
 
 	err = g.b.put(p, g.crr.color())
@@ -241,17 +250,15 @@ func (g *game) put(p point) (err error) {
 			if g.b[dp[1]][dp[0]] == g.crr.color() {
 				break
 			} else if g.b[dp[1]][dp[0]] == g.crr.enemy().color() {
-				// simulational flip
-				g.b.flip(dp)
-				// physical flip
-				err = g.m.Flip(dp[0], dp[1], g.crr.color().pole())
+
+				err = g.flip(dp, g.crr.color())
 
 				if err != nil {
 					return
 				}
 
 				// append to flip record
-				pr.fl = append(pr.fl, dp)
+				pr.flips = append(pr.flips, dp)
 			} else {
 				return errors.New("Can't available this direction")
 			}
@@ -261,6 +268,36 @@ func (g *game) put(p point) (err error) {
 	}
 
 	g.history = append(g.history, pr)
+
+	return
+}
+
+func (g *game) flip(p point, s state) (err error) {
+	// simulational flip
+	g.b.flip(p)
+	// physical flip
+	err = g.m.Flip(p[0], p[1], s.pole())
+
+	return
+}
+
+func (g *game) undo() (err error) {
+	record := g.history[len(g.history)-1]
+	g.history = g.history[:len(g.history)-1]
+
+	g.b[record.pt[1]][record.pt[0]] = NONE
+
+	for i := range record.flips {
+		// re-flip backwards
+		p := record.flips[len(record.flips)-i-1]
+		err = g.flip(p, record.pl.enemy().color())
+
+		if err != nil {
+			return fmt.Errorf("Failed to flip: %s", err)
+		}
+	}
+
+	g.crr = record.pl
 
 	return
 }
