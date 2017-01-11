@@ -23,6 +23,10 @@ func (s *state) flip() {
 	*s = -1 * *s
 }
 
+func (s state) pole() mrmiddle.Pole {
+	return mrmiddle.Pole(s)
+}
+
 type player int
 
 func (p player) enemy() player {
@@ -59,7 +63,7 @@ func (b *board) flip(p point) {
 // reversi middleware interface
 type middleware interface {
 	GetInput() (int, int)
-	Flip(int, int)
+	Flip(int, int, mrmiddle.Pole)
 }
 
 // game is main reversi game object
@@ -249,9 +253,7 @@ func (g *game) printBoard() {
 
 // print the game summary
 func (g *game) printSummary() {
-	fmt.Println("##################################################")
-	fmt.Println("")
-	fmt.Println("SUMMARY")
+	fmt.Println("# SUMMARY ########################################")
 
 	counts := map[state]int{BLACK: 0, WHITE: 0, NONE: 0}
 
@@ -274,7 +276,6 @@ func (g *game) printSummary() {
 	fmt.Printf("NUMBER OF WHITE STONE:\t%2d\n", counts[WHITE])
 	fmt.Printf("NUMBER OF BLANK SPACE:\t%2d\n", counts[NONE])
 
-	fmt.Println("")
 	fmt.Println("##################################################")
 }
 
