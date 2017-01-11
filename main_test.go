@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"testing"
 
@@ -24,7 +25,7 @@ func (m *dammyMiddleware) GetInput() (x int, y int) {
 }
 
 func (m *dammyMiddleware) Flip(x int, y int, pd mrmiddle.Pole) {
-	// do nothing
+	fmt.Printf("Flip to %s at (x, y) = (%d, %d)\n", map[mrmiddle.Pole]string{mrmiddle.N: "N", mrmiddle.S: "S"}[pd], x, y)
 }
 
 func TestMain(t *testing.T) {
