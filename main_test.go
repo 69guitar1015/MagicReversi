@@ -118,6 +118,8 @@ func TestMain(t *testing.T) {
 		},
 	}
 
+	m.Init()
+
 	g := newGame(m)
 
 	err := g.start()
