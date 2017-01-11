@@ -7,9 +7,20 @@ import (
 	"github.com/hybridgroup/gobot/platforms/intel-iot/edison"
 )
 
-// MrBoard is Magic Reversi's board object
-type MrBoard struct {
+// MrMiddle is Magic Reversi's middle ware object
+type MrMiddle struct {
 	e *edison.EdisonAdaptor
+}
+
+// NewMrMiddle returns MrMiddle instance
+func NewMrMiddle() (mm *MrMiddle) { // Edison Adapter
+	mm = &MrMiddle{}
+	mm.e = edison.NewEdisonAdaptor("edison")
+	mm.e.Connect()
+
+	mm.Init()
+
+	return
 }
 
 type row [8]bool
@@ -54,61 +65,52 @@ func y2AddrAndGpio(y int) (addr int, gpio int) {
 	return
 }
 
-// NewMrBoard returns MrBoard instance
-func NewMrBoard() (b *MrBoard) { // Edison Adapter
-	b = &MrBoard{}
-	b.e = edison.NewEdisonAdaptor("edison")
-	b.e.Connect()
-
-	return
-}
-
-// Init is initialization function of MrBoard
-func (b *MrBoard) Init() {
+// Init is initialization function of MrMiddle
+func (mm *MrMiddle) Init() {
 	log.Println("initialize circuit...")
 	var err error
 
 	for _, addr := range EXIA {
-		b.e.I2cStart(addr)
+		mm.e.I2cStart(addr)
 
 		//　Initialize IOCON
-		err = b.e.I2cWrite(addr, []byte{IOCON, 0x00})
+		err = mm.e.I2cWrite(addr, []byte{IOCON, 0x00})
 		checkError(err)
 
 		// Initialize IODIR as read
-		err = b.e.I2cWrite(addr, []byte{IODIRA, 0x00})
+		err = mm.e.I2cWrite(addr, []byte{IODIRA, 0x00})
 		checkError(err)
-		err = b.e.I2cWrite(addr, []byte{IODIRB, 0x00})
+		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0x00})
 		checkError(err)
 	}
 
 	for _, addr := range EXOA {
-		b.e.I2cStart(addr)
+		mm.e.I2cStart(addr)
 
 		//　Initialize IOCON
-		err = b.e.I2cWrite(addr, []byte{IOCON, 0x00})
+		err = mm.e.I2cWrite(addr, []byte{IOCON, 0x00})
 		checkError(err)
 
 		// Initialize IODIR as read
-		err = b.e.I2cWrite(addr, []byte{IODIRA, 0xFF})
+		err = mm.e.I2cWrite(addr, []byte{IODIRA, 0xFF})
 		checkError(err)
-		err = b.e.I2cWrite(addr, []byte{IODIRB, 0xFF})
+		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF})
 		checkError(err)
 	}
 
-	b.writeAllLow()
+	mm.writeAllLow()
 }
 
 // read given y line
-func (b *MrBoard) readLine(y int) (r row) {
+func (mm *MrMiddle) readLine(y int) (r row) {
 	addr, gpio := y2AddrAndGpio(y)
 
-	b.e.I2cStart(addr)
+	mm.e.I2cStart(addr)
 
-	err := b.e.I2cWrite(addr, []byte{byte(gpio)})
+	err := mm.e.I2cWrite(addr, []byte{byte(gpio)})
 	checkError(err)
 
-	data, err := b.e.I2cRead(addr, 1)
+	data, err := mm.e.I2cRead(addr, 1)
 	checkError(err)
 
 	r = byte2Row(data[0])
@@ -120,13 +122,13 @@ func (b *MrBoard) readLine(y int) (r row) {
 }
 
 // read both A and B bits of given address of the Expander
-func (b MrBoard) readAB(addr int) (byteSet [2]row) {
-	b.e.I2cStart(addr)
+func (mm MrMiddle) readAB(addr int) (byteSet [2]row) {
+	mm.e.I2cStart(addr)
 
-	err := b.e.I2cWrite(addr, []byte{GPIOA})
+	err := mm.e.I2cWrite(addr, []byte{GPIOA})
 	checkError(err)
 
-	data, err := b.e.I2cRead(addr, 2)
+	data, err := mm.e.I2cRead(addr, 2)
 	checkError(err)
 
 	byteSet[0] = byte2Row(data[0]).reversed()
@@ -136,9 +138,9 @@ func (b MrBoard) readAB(addr int) (byteSet [2]row) {
 }
 
 // ReadWholeBoard returns whole board status
-func (b *MrBoard) readWholeBoard() (byteSet [8]row) {
+func (mm *MrMiddle) readWholeBoard() (byteSet [8]row) {
 	for i, addr := range EXIA {
-		data := b.readAB(addr)
+		data := mm.readAB(addr)
 
 		byteSet[2*i] = data[0].reversed()
 		byteSet[2*i+1] = data[1]
@@ -148,10 +150,10 @@ func (b *MrBoard) readWholeBoard() (byteSet [8]row) {
 }
 
 // GetInput waits until board state changes and return x, y
-func (b *MrBoard) GetInput() (int, int) {
-	old := b.readWholeBoard()
+func (mm *MrMiddle) GetInput() (int, int) {
+	old := mm.readWholeBoard()
 	for {
-		crr := b.readWholeBoard()
+		crr := mm.readWholeBoard()
 
 		if crr != old {
 			for i, r := range crr {
@@ -169,33 +171,33 @@ func (b *MrBoard) GetInput() (int, int) {
 }
 
 // write byte data to designated line
-func (b *MrBoard) writeByte(y int, v byte) {
+func (mm *MrMiddle) writeByte(y int, v byte) {
 	addr, gpio := y2AddrAndGpio(y)
 
-	b.e.I2cStart(addr)
+	mm.e.I2cStart(addr)
 
 	data := []byte{byte(gpio), v}
-	b.e.I2cWrite(addr, data)
+	mm.e.I2cWrite(addr, data)
 }
 
-func (b *MrBoard) writeAllLow() {
+func (mm *MrMiddle) writeAllLow() {
 	for y := 0; y < 8; y++ {
-		b.writeByte(y, 0x00)
+		mm.writeByte(y, 0x00)
 	}
 }
 
 // HighWhile make (x, y) to High while ms[msec]
-func (b *MrBoard) highWhile(x int, y int, ms time.Duration) {
+func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration) {
 	bits := byte(0x01 << uint(x))
 
-	b.writeByte(y, bits)
+	mm.writeByte(y, bits)
 
 	time.Sleep(ms * time.Millisecond)
 
-	b.writeByte(y, 0x00)
+	mm.writeByte(y, 0x00)
 }
 
 // Flip flips a stone at (x, y)
-func (b *MrBoard) Flip(x int, y int) {
-	b.highWhile(x, y, FLIPTIME)
+func (mm *MrMiddle) Flip(x int, y int) {
+	mm.highWhile(x, y, FLIPTIME)
 }
