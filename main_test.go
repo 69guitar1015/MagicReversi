@@ -120,9 +120,9 @@ func TestMain(t *testing.T) {
 
 	m.Init()
 
-	g := newGame(m)
+	g := NewGame(m)
 
-	err := g.start()
+	err := g.Start()
 
 	if err != nil {
 		log.Fatal(err)
