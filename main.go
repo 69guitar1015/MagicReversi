@@ -117,7 +117,8 @@ type Game struct {
 	available map[Point][]direction
 }
 
-func newGame(m middleware) (g *Game) {
+// NewGame returns a initial Game object
+func NewGame(m middleware) (g *Game) {
 	g = &Game{
 		b: board{
 			[10]State{WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
@@ -140,7 +141,8 @@ func newGame(m middleware) (g *Game) {
 	return
 }
 
-func (g *Game) start() (err error) {
+// Start is game starting trigger
+func (g *Game) Start() (err error) {
 	for {
 		g.printBoard()
 
@@ -396,9 +398,9 @@ func main() {
 
 	checkError(err)
 
-	g := newGame(m)
+	g := NewGame(m)
 
-	err = g.start()
+	err = g.Start()
 
 	checkError(err)
 }
