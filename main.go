@@ -98,9 +98,9 @@ type middleware interface {
 
 // PutRecord represents single record of put history
 type PutRecord struct {
-	pt    Point
-	pl    Player
-	flips []Point
+	point  Point
+	player Player
+	flips  []Point
 }
 
 // Game represents whole reversi Game
@@ -240,9 +240,9 @@ func (g *Game) put(p Point) (err error) {
 	}
 
 	pr := PutRecord{
-		pt:    p,
-		pl:    g.crr,
-		flips: []Point{},
+		point:  p,
+		player: g.crr,
+		flips:  []Point{},
 	}
 
 	err = g.b.put(p, g.crr.color())
@@ -293,19 +293,19 @@ func (g *Game) undo() (err error) {
 	record := g.history[len(g.history)-1]
 	g.history = g.history[:len(g.history)-1]
 
-	g.b[record.pt[1]][record.pt[0]] = NONE
+	g.b[record.point[1]][record.point[0]] = NONE
 
 	for i := range record.flips {
 		// re-flip backwards
 		p := record.flips[len(record.flips)-i-1]
-		err = g.flip(p, record.pl.enemy().color())
+		err = g.flip(p, record.player.enemy().color())
 
 		if err != nil {
 			return fmt.Errorf("Failed to flip: %s", err)
 		}
 	}
 
-	g.crr = record.pl
+	g.crr = record.player
 
 	return
 }
@@ -374,7 +374,7 @@ func (g *Game) printSummary() {
 
 	fmt.Printf("\n# KIFU\n")
 	for i, record := range g.history {
-		fmt.Printf("[%2d]\t(%d, %d)\t%s\t", i+1, record.pt[0], record.pt[1], record.pl)
+		fmt.Printf("[%2d]\t(%d, %d)\t%s\t", i+1, record.point[0], record.point[1], record.player)
 		if (i+1)%3 == 0 {
 			fmt.Printf("\n")
 		}
