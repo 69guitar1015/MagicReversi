@@ -17,17 +17,18 @@ const (
 	WALL  = 2
 )
 
-type state int
+// State represents a status of each cell of board grid
+type State int
 
-func (s *state) flip() {
+func (s *State) flip() {
 	*s = -1 * *s
 }
 
-func (s state) pole() mrmiddle.Pole {
+func (s State) pole() mrmiddle.Pole {
 	return mrmiddle.Pole(s)
 }
 
-func (s state) String() string {
+func (s State) String() string {
 	switch s {
 	case BLACK:
 		return "BLACK"
@@ -42,17 +43,18 @@ func (s state) String() string {
 	}
 }
 
-type player int
+// Player represents reversi player
+type Player int
 
-func (p player) enemy() player {
+func (p Player) enemy() Player {
 	return -1 * p
 }
 
-func (p player) color() state {
-	return state(p)
+func (p Player) color() State {
+	return State(p)
 }
 
-func (p player) String() string {
+func (p Player) String() string {
 	switch p {
 	case BLACK:
 		return "BLACK"
@@ -63,17 +65,18 @@ func (p player) String() string {
 	}
 }
 
-type point [2]int
+// Point represents a point on the board
+type Point [2]int
 
-func (b point) equal(a point) bool {
+func (b Point) equal(a Point) bool {
 	return a[0] == b[0] && a[1] == b[1]
 }
 
 type direction [2]int
 
-type board [10][10]state
+type board [10][10]State
 
-func (b *board) put(p point, c state) error {
+func (b *board) put(p Point, c State) error {
 	if b[p[1]][p[0]] != NONE {
 		return errors.New("There is already put a stone")
 	}
@@ -82,7 +85,7 @@ func (b *board) put(p point, c state) error {
 	return nil
 }
 
-func (b *board) flip(p point) {
+func (b *board) flip(p Point) {
 	b[p[1]][p[0]].flip()
 }
 
@@ -93,51 +96,51 @@ type middleware interface {
 	Flip(int, int, mrmiddle.Pole) error
 }
 
-// single record of put history
-type putRecord struct {
-	pt    point
-	pl    player
-	flips []point
+// PutRecord represents single record of put history
+type PutRecord struct {
+	pt    Point
+	pl    Player
+	flips []Point
 }
 
-// game is main reversi game object
-type game struct {
+// Game represents whole reversi Game
+type Game struct {
 	// board object
 	b board
-	// current player
-	crr player
+	// current Player
+	crr Player
 	// middleware object
 	m middleware
 	// history of put stone
-	history []putRecord
+	history []PutRecord
 	// available points
-	available map[point][]direction
+	available map[Point][]direction
 }
 
-func newGame(m middleware) (g *game) {
-	g = &game{
+func newGame(m middleware) (g *Game) {
+	g = &Game{
 		b: board{
-			[10]state{WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
-			[10]state{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
-			[10]state{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
-			[10]state{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
-			[10]state{WALL, NONE, NONE, NONE, WHITE, BLACK, NONE, NONE, NONE, WALL},
-			[10]state{WALL, NONE, NONE, NONE, BLACK, WHITE, NONE, NONE, NONE, WALL},
-			[10]state{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
-			[10]state{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
-			[10]state{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
-			[10]state{WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
+			[10]State{WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
+			[10]State{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
+			[10]State{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
+			[10]State{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
+			[10]State{WALL, NONE, NONE, NONE, WHITE, BLACK, NONE, NONE, NONE, WALL},
+			[10]State{WALL, NONE, NONE, NONE, BLACK, WHITE, NONE, NONE, NONE, WALL},
+			[10]State{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
+			[10]State{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
+			[10]State{WALL, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, WALL},
+			[10]State{WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
 		},
 		crr:       BLACK,
 		m:         m,
-		history:   []putRecord{},
-		available: map[point][]direction{},
+		history:   []PutRecord{},
+		available: map[Point][]direction{},
 	}
 
 	return
 }
 
-func (g *game) start() (err error) {
+func (g *Game) start() (err error) {
 	for {
 		g.printBoard()
 
@@ -149,7 +152,7 @@ func (g *game) start() (err error) {
 			return
 		}
 
-		// skip if game is not finished and there is not available points
+		// skip if Game is not finished and there is not available points
 		if len(g.available) == 0 {
 			fmt.Println("skipping")
 			g.crr = g.crr.enemy()
@@ -162,7 +165,7 @@ func (g *game) start() (err error) {
 			return fmt.Errorf("Failed to get input: %s", err)
 		}
 
-		p := point{x, y}
+		p := Point{x, y}
 
 		if p[0] == -1 && p[1] == -1 {
 			// undo when (x, y) == (-1, -1)
@@ -185,9 +188,9 @@ func (g *game) start() (err error) {
 	}
 }
 
-// seek available point
-func (g *game) seekAvailable() map[point][]direction {
-	available := map[point][]direction{}
+// seek available Point
+func (g *Game) seekAvailable() map[Point][]direction {
+	available := map[Point][]direction{}
 
 	for y := 1; y <= 8; y++ {
 		for x := 1; x <= 8; x++ {
@@ -205,7 +208,7 @@ func (g *game) seekAvailable() map[point][]direction {
 						dist := 2
 						for {
 							if g.b[y+dist*dy][x+dist*dx] == g.crr.color() {
-								p := point{x, y}
+								p := Point{x, y}
 								available[p] = append(available[p], direction{dx, dy})
 								break
 							} else if g.b[y+dist*dy][x+dist*dx] == g.crr.enemy().color() {
@@ -223,21 +226,21 @@ func (g *game) seekAvailable() map[point][]direction {
 	return available
 }
 
-func (g *game) setAvailable() {
+func (g *Game) setAvailable() {
 	g.available = g.seekAvailable()
 }
 
 // put a stone to (x, y) address on the board
-func (g *game) put(p point) (err error) {
-	// return error if the point is not available
+func (g *Game) put(p Point) (err error) {
+	// return error if the Point is not available
 	if len(g.available[p]) == 0 {
 		return errors.New("Can't put stones there")
 	}
 
-	pr := putRecord{
+	pr := PutRecord{
 		pt:    p,
 		pl:    g.crr,
-		flips: []point{},
+		flips: []Point{},
 	}
 
 	err = g.b.put(p, g.crr.color())
@@ -249,7 +252,7 @@ func (g *game) put(p point) (err error) {
 	for _, d := range g.available[p] {
 		dist := 1
 		for {
-			dp := point{p[0] + dist*d[0], p[1] + dist*d[1]}
+			dp := Point{p[0] + dist*d[0], p[1] + dist*d[1]}
 			if g.b[dp[1]][dp[0]] == g.crr.color() {
 				break
 			} else if g.b[dp[1]][dp[0]] == g.crr.enemy().color() {
@@ -275,7 +278,7 @@ func (g *game) put(p point) (err error) {
 	return
 }
 
-func (g *game) flip(p point, s state) (err error) {
+func (g *Game) flip(p Point, s State) (err error) {
 	// simulational flip
 	g.b.flip(p)
 	// physical flip
@@ -284,7 +287,7 @@ func (g *game) flip(p point, s state) (err error) {
 	return
 }
 
-func (g *game) undo() (err error) {
+func (g *Game) undo() (err error) {
 	record := g.history[len(g.history)-1]
 	g.history = g.history[:len(g.history)-1]
 
@@ -305,9 +308,9 @@ func (g *game) undo() (err error) {
 	return
 }
 
-// judge whether the game is finished
-func (g *game) isFinish() bool {
-	// if each player has no available points, game is over
+// judge whether the Game is finished
+func (g *Game) isFinish() bool {
+	// if each Player has no available points, Game is over
 	if len(g.available) == 0 {
 		g.crr = g.crr.enemy()
 		ava := g.seekAvailable()
@@ -321,7 +324,7 @@ func (g *game) isFinish() bool {
 	return false
 }
 
-func (g *game) printBoard() {
+func (g *Game) printBoard() {
 	for i, row := range g.b {
 		for j, v := range row {
 			switch v {
@@ -344,11 +347,11 @@ func (g *game) printBoard() {
 	}
 }
 
-// print the game summary
-func (g *game) printSummary() {
+// print the Game summary
+func (g *Game) printSummary() {
 	fmt.Println("# SUMMARY ###########################################################")
 
-	counts := map[state]int{BLACK: 0, WHITE: 0, NONE: 0}
+	counts := map[State]int{BLACK: 0, WHITE: 0, NONE: 0}
 
 	for i := 0; i <= 8; i++ {
 		for j := 0; j <= 8; j++ {
@@ -360,7 +363,7 @@ func (g *game) printSummary() {
 	case counts[BLACK] == counts[WHITE]:
 		fmt.Println("DRAW")
 	default:
-		fmt.Printf("%s PLAYER WINS!\n", player(BLACK))
+		fmt.Printf("%s PLAYER WINS!\n", Player(BLACK))
 	}
 
 	fmt.Printf("NUMBER OF BLACK STONE:\t%2d\n", counts[BLACK])
