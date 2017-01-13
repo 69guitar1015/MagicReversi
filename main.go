@@ -1,10 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"time"
 
-	"github.com/69guitar1015/MagicReversi/mrmiddle"
-	"github.com/69guitar1015/MagicReversi/mrsoft"
+	"gobot.io/x/gobot/platforms/intel-iot/edison"
 )
 
 func checkError(err error) {
@@ -14,17 +15,41 @@ func checkError(err error) {
 }
 
 func main() {
-	m, err := mrmiddle.NewMrMiddle()
+	e := edison.NewAdaptor()
+
+	err := e.Connect()
 
 	checkError(err)
 
-	err = m.Init()
+	f := 0
+	i := 0
+	out1 := 0
+	out2 := 0
+	for {
+		v1, _ := e.DigitalRead("4")
 
-	checkError(err)
+		if v1 == 1 && f == 0 {
+			out1 = i
+			out2 = 1 - i
+			f++
+		} else if v1 == 1 && (f < 3) {
+			out1 = 0
+			out2 = 0
+			f++
+		} else if v1 == 0 {
+			out1 = 0
+			out2 = 0
+			f = 0
+		} else {
+			i = 1 - i
+			f = 0
+		}
 
-	g := mrsoft.NewGame(m)
+		e.DigitalWrite("12", byte(out1))
+		e.DigitalWrite("13", byte(out2))
 
-	err = g.Start()
+		fmt.Printf("val1: %d,\tout1: %d,\tout2 %d\n", v1, out1, out2)
 
-	checkError(err)
+		time.Sleep(500 * time.Millisecond)
+	}
 }
