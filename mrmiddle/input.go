@@ -72,14 +72,14 @@ func (mm *MrMiddle) GetInput() (int, int, error) {
 	old, err := mm.readWholeBoard()
 
 	if checkError(err) {
-		return -1, -1, wrapError(err)
+		return 0, 0, wrapError(err)
 	}
 
 	for {
 		crr, err := mm.readWholeBoard()
 
 		if checkError(err) {
-			return -1, -1, wrapError(err)
+			return 0, 0, wrapError(err)
 		}
 
 		if crr != old {
