@@ -99,7 +99,7 @@ func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration, pd Pole) (err erro
 		return wrapError(err)
 	}
 
-	time.Sleep(ms * time.Millisecond)
+	time.Sleep(ms)
 
 	err = mm.ReleaseCoil()
 
