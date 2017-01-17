@@ -60,7 +60,7 @@ func (mm *MrMiddle) readWholeBoard() (byteSet [8]row, err error) {
 			return [8]row{}, wrapError(err)
 		}
 
-		byteSet[2*i] = data[0].reversed()
+		byteSet[2*i] = data[0]
 		byteSet[2*i+1] = data[1]
 	}
 
