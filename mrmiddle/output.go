@@ -9,14 +9,14 @@ func (mm *MrMiddle) writeByte(y int, v byte) (err error) {
 	err = mm.e.I2cStart(addr)
 
 	if checkError(err) {
-		return wrapError(err)
+		return
 	}
 
 	data := []byte{byte(gpio), v}
 	err = mm.e.I2cWrite(addr, data)
 
 	if checkError(err) {
-		return wrapError(err)
+		return
 	}
 
 	return
@@ -27,7 +27,7 @@ func (mm *MrMiddle) writeAllLow() (err error) {
 		err = mm.writeByte(y, 0x00)
 
 		if checkError(err) {
-			return wrapError(err)
+			return
 		}
 	}
 
@@ -41,25 +41,25 @@ func (mm *MrMiddle) DriveCoil(pd Pole) (err error) {
 		err = mm.e.DigitalWrite(IN1, 1)
 
 		if checkError(err) {
-			return wrapError(err)
+			return
 		}
 
 		err = mm.e.DigitalWrite(IN2, 0)
 
 		if checkError(err) {
-			return wrapError(err)
+			return
 		}
 	case S:
 		err = mm.e.DigitalWrite(IN1, 0)
 
 		if checkError(err) {
-			return wrapError(err)
+			return
 		}
 
 		err = mm.e.DigitalWrite(IN2, 1)
 
 		if checkError(err) {
-			return wrapError(err)
+			return
 		}
 	}
 
@@ -71,13 +71,13 @@ func (mm *MrMiddle) ReleaseCoil() (err error) {
 	err = mm.e.DigitalWrite(IN1, 0)
 
 	if checkError(err) {
-		return wrapError(err)
+		return
 	}
 
 	err = mm.e.DigitalWrite(IN2, 0)
 
 	if checkError(err) {
-		return wrapError(err)
+		return
 	}
 
 	return
@@ -90,27 +90,27 @@ func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration, pd Pole) (err erro
 	err = mm.writeByte(y, bits)
 
 	if checkError(err) {
-		return wrapError(err)
+		return
 	}
 
 	err = mm.DriveCoil(pd)
 
 	if checkError(err) {
-		return wrapError(err)
+		return
 	}
 
-	time.Sleep(ms * time.Millisecond)
+	time.Sleep(ms)
 
 	err = mm.ReleaseCoil()
 
 	if checkError(err) {
-		return wrapError(err)
+		return
 	}
 
 	err = mm.writeByte(y, 0x00)
 
 	if checkError(err) {
-		return wrapError(err)
+		return
 	}
 
 	return
