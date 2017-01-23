@@ -65,7 +65,7 @@ func tasks(p *do.Project) {
 		"killall_process",
 		"copy_to_edison",
 		"exec_process",
-		"see_output",
+		// "see_output",
 	}
 
 	p.Task("default", defaultTask, nil).Src("**/*.go")

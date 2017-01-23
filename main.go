@@ -6,9 +6,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/69guitar1015/MagicReversi/mrmiddle"
-	"github.com/69guitar1015/MagicReversi/mrsoft"
 )
 
 func checkError(err error, m *mrmiddle.MrMiddle) {
@@ -42,9 +42,50 @@ func main() {
 
 	checkError(err, m)
 
-	g := mrsoft.NewGame(m)
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
 
-	err = g.Start()
+	go func() {
+		<-signalChan
+		fmt.Println("Terminated...")
+		m.Finalize()
+		os.Exit(1)
+	}()
 
-	checkError(err, m)
+	// for i := 0; i < 20; i++ {
+	// 	err = m.GotThem(byte(12 * i))
+	// 	time.Sleep(300 * time.Millisecond)
+	// }
+	// m.Finalize()
+
+	// err = m.GotThem(200)
+	// m.Finalize()
+	// checkError(err, m)
+
+	i := 0
+	s := [][]int{[]int{3, 4}, []int{4, 4}, []int{5, 4}, []int{6, 4}, []int{6, 5}, []int{5, 5}, []int{4, 5}, []int{3, 5}}
+	pd := mrmiddle.N
+
+	for {
+		p := s[i]
+
+		fmt.Println(p)
+
+		m.Flip(p[0], p[1], pd)
+
+		i = (i + 1) % len(s)
+		if i == 0 {
+			if pd == mrmiddle.N {
+				pd = mrmiddle.S
+			} else {
+				pd = mrmiddle.N
+			}
+		}
+
+		time.Sleep(300 * time.Millisecond)
+	}
 }

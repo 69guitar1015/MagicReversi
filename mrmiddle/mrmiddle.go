@@ -179,3 +179,29 @@ func (mm *MrMiddle) Finalize() (err error) {
 
 	return
 }
+
+func (mm *MrMiddle) FuckUp() {
+	for {
+		val, err := mm.e.AnalogRead("0")
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Println(val)
+
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
+func (mm *MrMiddle) GotThem(val byte) (err error) {
+	err = mm.driveCoil(N)
+	time.Sleep(3 * time.Second)
+
+	err = mm.releaseCoil()
+	time.Sleep(3 * time.Second)
+
+	err = mm.driveCoil(S)
+	time.Sleep(3 * time.Second)
+	return
+}

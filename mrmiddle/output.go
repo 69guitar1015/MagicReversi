@@ -76,7 +76,7 @@ func (mm *MrMiddle) releaseCoil() (err error) {
 }
 
 // HighWhile make (x, y) to High while ms[msec]
-func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration, pd Pole) (err error) {
+func (mm *MrMiddle) HighWhile(x int, y int, ms time.Duration, pd Pole) (err error) {
 	bits := byte(0x01 << uint(x-1))
 
 	if err = mm.writeByte(y, bits); checkError(err) {
@@ -98,7 +98,7 @@ func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration, pd Pole) (err erro
 
 // Flip flips a stone at (x, y)
 func (mm *MrMiddle) Flip(x int, y int, pd Pole) (err error) {
-	err = mm.highWhile(x, y, FLIPTIME, pd)
+	err = mm.HighWhile(x, y, FLIPTIME, pd)
 
 	if checkError(err) {
 		return wrapError(err)
