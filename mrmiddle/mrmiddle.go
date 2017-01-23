@@ -85,12 +85,12 @@ func (mm *MrMiddle) Init() (err error) {
 		}
 
 		// Initialize IODIR as read
-		err = mm.e.I2cWrite(addr, []byte{IODIRA, 0x00})
+		err = mm.e.I2cWrite(addr, []byte{IODIRA, 0xFF})
 
 		if checkError(err) {
 			return wrapError(err)
 		}
-		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0x00})
+		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF})
 
 		if checkError(err) {
 			return wrapError(err)
@@ -108,12 +108,12 @@ func (mm *MrMiddle) Init() (err error) {
 		}
 
 		// Initialize IODIR as read
-		err = mm.e.I2cWrite(addr, []byte{IODIRA, 0xFF})
+		err = mm.e.I2cWrite(addr, []byte{IODIRA, 0x00})
 
 		if checkError(err) {
 			return wrapError(err)
 		}
-		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF})
+		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0x00})
 
 		if checkError(err) {
 			return wrapError(err)
