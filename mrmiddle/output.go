@@ -12,6 +12,10 @@ func (mm *MrMiddle) writeByte(y int, v byte) (err error) {
 		return
 	}
 
+	if gpio == GPIOA {
+		v = byte2Row(v).reversed().toByte()
+	}
+
 	data := []byte{byte(gpio), v}
 	err = mm.e.I2cWrite(addr, data)
 

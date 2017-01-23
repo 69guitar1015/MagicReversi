@@ -37,6 +37,18 @@ func (r row) reversed() (reversed row) {
 	return
 }
 
+func (r row) toByte() (b byte) {
+	b = 0
+
+	for i, v := range r {
+		if v {
+			b += 0x01 << uint(i)
+		}
+	}
+
+	return
+}
+
 func checkError(err error) bool {
 	return err != nil
 }
