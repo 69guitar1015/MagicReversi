@@ -56,11 +56,16 @@ func tasks(p *do.Project) {
 		c.Run("ssh {{.edison_host}} 'nohup /home/{{.edison_user}}/{{.app_name}} > /home/{{.edison_user}}/output.log 2>&1 &'", options)
 	})
 
+	p.Task("see_output", nil, func(c *do.Context) {
+		c.Run("ssh {{.edison_host}} 'tail -f output.log'", options)
+	})
+
 	defaultTask := do.S{
 		"build",
 		"killall_process",
 		"copy_to_edison",
 		"exec_process",
+		"see_output",
 	}
 
 	p.Task("default", defaultTask, nil).Src("**/*.go")
