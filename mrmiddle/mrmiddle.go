@@ -119,7 +119,7 @@ func (mm *MrMiddle) Init() (err error) {
 			return wrapError(err)
 		}
 
-		// Initialize IODIR as read
+		// Initialize IODIR as write
 		err = mm.e.I2cWrite(addr, []byte{IODIRA, 0x00})
 
 		if checkError(err) {
