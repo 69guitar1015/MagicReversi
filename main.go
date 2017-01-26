@@ -7,8 +7,9 @@ import (
 	"github.com/69guitar1015/MagicReversi/mrsoft"
 )
 
-func checkError(err error) {
+func checkError(err error, m *mrmiddle.MrMiddle) {
 	if err != nil {
+		m.Off()
 		log.Fatal(err)
 	}
 }
@@ -16,15 +17,15 @@ func checkError(err error) {
 func main() {
 	m, err := mrmiddle.NewMrMiddle()
 
-	checkError(err)
+	checkError(err, m)
 
 	err = m.Init()
 
-	checkError(err)
+	checkError(err, m)
 
 	g := mrsoft.NewGame(m)
 
 	err = g.Start()
 
-	checkError(err)
+	checkError(err, m)
 }
