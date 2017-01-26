@@ -63,6 +63,8 @@ var EXOA = [4]int{0x24, 0x25, 0x26, 0x27}
 //
 
 const (
+	// VCC is 5V pin
+	VCC = "2"
 	// IN1 is IN1 pin
 	IN1 = "13"
 	// IN2 is IN2 pin
