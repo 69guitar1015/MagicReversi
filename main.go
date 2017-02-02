@@ -40,21 +40,11 @@ func main() {
 
 	err = m.Init()
 
-	checkError(err, m)
+	// checkError(err, m)
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
+	m.GotThem()
 
-	go func() {
-		<-signalChan
-		fmt.Println("Terminated...")
-		m.Finalize()
-		os.Exit(1)
-	}()
+	return
 
 	// for i := 0; i < 20; i++ {
 	// 	err = m.GotThem(byte(12 * i))

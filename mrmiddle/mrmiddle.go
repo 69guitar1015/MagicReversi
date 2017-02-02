@@ -194,7 +194,7 @@ func (mm *MrMiddle) FuckUp() {
 	}
 }
 
-func (mm *MrMiddle) GotThem(val byte) (err error) {
+func (mm *MrMiddle) GotThem() (err error) {
 	err = mm.driveCoil(N)
 	time.Sleep(3 * time.Second)
 
@@ -203,5 +203,6 @@ func (mm *MrMiddle) GotThem(val byte) (err error) {
 
 	err = mm.driveCoil(S)
 	time.Sleep(3 * time.Second)
+
 	return
 }
