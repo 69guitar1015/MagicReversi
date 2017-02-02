@@ -8,9 +8,7 @@ func (mm *MrMiddle) readLine(y int) (r row, err error) {
 
 	mm.e.I2cStart(addr)
 
-	err = mm.e.I2cWrite(addr, []byte{byte(gpio)})
-
-	if checkError(err) {
+	if err = mm.e.I2cWrite(addr, []byte{byte(gpio)}); checkError(err) {
 		return row{}, wrapError(err)
 	}
 
@@ -33,9 +31,7 @@ func (mm *MrMiddle) readLine(y int) (r row, err error) {
 func (mm MrMiddle) readAB(addr int) (byteSet [2]row, err error) {
 	mm.e.I2cStart(addr)
 
-	err = mm.e.I2cWrite(addr, []byte{GPIOA})
-
-	if checkError(err) {
+	if err = mm.e.I2cWrite(addr, []byte{GPIOA}); checkError(err) {
 		return [2]row{}, wrapError(err)
 	}
 

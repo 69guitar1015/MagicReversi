@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	multierror "github.com/hashicorp/go-multierror"
+
 	"gobot.io/x/gobot/platforms/intel-iot/edison"
 )
 
@@ -87,33 +89,33 @@ func y2AddrAndGpio(y int) (addr int, gpio int) {
 func (mm *MrMiddle) Init() (err error) {
 	log.Println("Initialize circuit...")
 
-	if err = export(IN1); checkError(err) {
-		// return wrapError(err)
+	if e := export(IN1); checkError(e) {
+		err = multierror.Append(err, wrapError(e))
 	}
 
-	if err = export(IN2); checkError(err) {
-		// return wrapError(err)
+	if e := export(IN2); checkError(e) {
+		err = multierror.Append(err, wrapError(e))
 	}
 
-	if err = mm.releaseCoil(); checkError(err) {
-		return wrapError(err)
+	if e := mm.releaseCoil(); checkError(e) {
+		err = multierror.Append(err, wrapError(e))
 	}
 
 	for _, addr := range EXIA {
 		mm.e.I2cStart(addr)
 
 		//　Initialize IOCON
-		if err = mm.e.I2cWrite(addr, []byte{IOCON, 0x00}); checkError(err) {
-			return wrapError(err)
+		if e := mm.e.I2cWrite(addr, []byte{IOCON, 0x00}); checkError(e) {
+			err = multierror.Append(err, wrapError(e))
 		}
 
 		// Initialize IODIR as read
-		if err = mm.e.I2cWrite(addr, []byte{IODIRA, 0xFF}); checkError(err) {
-			return wrapError(err)
+		if e := mm.e.I2cWrite(addr, []byte{IODIRA, 0xFF}); checkError(e) {
+			err = multierror.Append(err, wrapError(e))
 		}
 
-		if err = mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF}); checkError(err) {
-			return wrapError(err)
+		if e := mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF}); checkError(e) {
+			err = multierror.Append(err, wrapError(e))
 		}
 	}
 
@@ -121,22 +123,22 @@ func (mm *MrMiddle) Init() (err error) {
 		mm.e.I2cStart(addr)
 
 		//　Initialize IOCON
-		if err = mm.e.I2cWrite(addr, []byte{IOCON, 0x00}); checkError(err) {
-			return wrapError(err)
+		if e := mm.e.I2cWrite(addr, []byte{IOCON, 0x00}); checkError(e) {
+			err = multierror.Append(err, wrapError(e))
 		}
 
 		// Initialize IODIR as write
-		if err = mm.e.I2cWrite(addr, []byte{IODIRA, 0x00}); checkError(err) {
-			return wrapError(err)
+		if e := mm.e.I2cWrite(addr, []byte{IODIRA, 0x00}); checkError(e) {
+			err = multierror.Append(err, wrapError(e))
 		}
 
-		if err = mm.e.I2cWrite(addr, []byte{IODIRB, 0x00}); checkError(err) {
-			return wrapError(err)
+		if e := mm.e.I2cWrite(addr, []byte{IODIRB, 0x00}); checkError(e) {
+			err = multierror.Append(err, wrapError(e))
 		}
 	}
 
-	if err = mm.writeAllLow(); checkError(err) {
-		return wrapError(err)
+	if e := mm.writeAllLow(); checkError(e) {
+		err = multierror.Append(err, wrapError(e))
 	}
 
 	return
@@ -145,21 +147,18 @@ func (mm *MrMiddle) Init() (err error) {
 // Finalize execute finalizing process
 func (mm *MrMiddle) Finalize() (err error) {
 	fmt.Println("Finalize...")
-	err = mm.releaseCoil()
-	if checkError(err) {
-		return wrapError(err)
+	if e := mm.releaseCoil(); checkError(e) {
+		err = multierror.Append(err, wrapError(e))
 	}
 
 	time.Sleep(100 * time.Millisecond)
 
-	err = mm.writeAllLow()
-	if checkError(err) {
-		return wrapError(err)
+	if e := mm.writeAllLow(); checkError(e) {
+		err = multierror.Append(err, wrapError(e))
 	}
 
-	err = mm.e.Finalize()
-	if checkError(err) {
-		return wrapError(err)
+	if e := mm.e.Finalize(); checkError(e) {
+		err = multierror.Append(err, wrapError(e))
 	}
 
 	return
