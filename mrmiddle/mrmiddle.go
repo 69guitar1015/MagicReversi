@@ -87,9 +87,15 @@ func y2AddrAndGpio(y int) (addr int, gpio int) {
 func (mm *MrMiddle) Init() (err error) {
 	log.Println("Initialize circuit...")
 
-	err = mm.releaseCoil()
+	if err = export(IN1); checkError(err) {
+		// return wrapError(err)
+	}
 
-	if checkError(err) {
+	if export(IN2); checkError(err) {
+		// return wrapError(err)
+	}
+
+	if err = mm.releaseCoil(); checkError(err) {
 		return wrapError(err)
 	}
 
@@ -97,22 +103,16 @@ func (mm *MrMiddle) Init() (err error) {
 		mm.e.I2cStart(addr)
 
 		//　Initialize IOCON
-		err = mm.e.I2cWrite(addr, []byte{IOCON, 0x00})
-
-		if checkError(err) {
+		if err = mm.e.I2cWrite(addr, []byte{IOCON, 0x00}); checkError(err) {
 			return wrapError(err)
 		}
 
 		// Initialize IODIR as read
-		err = mm.e.I2cWrite(addr, []byte{IODIRA, 0xFF})
-
-		if checkError(err) {
+		if err = mm.e.I2cWrite(addr, []byte{IODIRA, 0xFF}); checkError(err) {
 			return wrapError(err)
 		}
 
-		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF})
-
-		if checkError(err) {
+		if err = mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF}); checkError(err) {
 			return wrapError(err)
 		}
 	}
@@ -121,28 +121,21 @@ func (mm *MrMiddle) Init() (err error) {
 		mm.e.I2cStart(addr)
 
 		//　Initialize IOCON
-		err = mm.e.I2cWrite(addr, []byte{IOCON, 0x00})
-
-		if checkError(err) {
+		if err = mm.e.I2cWrite(addr, []byte{IOCON, 0x00}); checkError(err) {
 			return wrapError(err)
 		}
 
 		// Initialize IODIR as write
-		err = mm.e.I2cWrite(addr, []byte{IODIRA, 0x00})
-
-		if checkError(err) {
+		if err = mm.e.I2cWrite(addr, []byte{IODIRA, 0x00}); checkError(err) {
 			return wrapError(err)
 		}
-		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0x00})
 
-		if checkError(err) {
+		if err = mm.e.I2cWrite(addr, []byte{IODIRB, 0x00}); checkError(err) {
 			return wrapError(err)
 		}
 	}
 
-	err = mm.writeAllLow()
-
-	if checkError(err) {
+	if err = mm.writeAllLow(); checkError(err) {
 		return wrapError(err)
 	}
 
