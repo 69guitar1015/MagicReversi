@@ -38,50 +38,46 @@ func (mm *MrMiddle) writeAllLow() (err error) {
 	return
 }
 
-// DriveCoil drives coils as given pole direction
-func (mm *MrMiddle) DriveCoil(pd Pole) (err error) {
+// driveCoil drives coils as given pole direction
+func (mm *MrMiddle) driveCoil(pd Pole) (err error) {
 	switch pd {
 	case N:
-		err = mm.e.PwmWrite(IN2, 0)
-
-		if checkError(err) {
-			return
+		if err = mm.e.PwmWrite(IN1, PWMLEVEL); checkError(err) {
+			return wrapError(err)
 		}
 
-		err = mm.e.PwmWrite(IN1, PWMLEVEL)
-
-		if checkError(err) {
-			return
+		if err = pwmEnable(IN1, "1"); checkError(err) {
+			return wrapError(err)
 		}
+
 	case S:
-		err = mm.e.PwmWrite(IN1, 0)
-
-		if checkError(err) {
-			return
+		if err = mm.e.PwmWrite(IN2, PWMLEVEL); checkError(err) {
+			return wrapError(err)
 		}
 
-		err = mm.e.PwmWrite(IN2, PWMLEVEL)
-
-		if checkError(err) {
-			return
+		if err = pwmEnable(IN2, "1"); checkError(err) {
+			return wrapError(err)
 		}
 	}
 
 	return
 }
 
-// ReleaseCoil releases coils
-func (mm *MrMiddle) ReleaseCoil() (err error) {
-	err = mm.e.PwmWrite(IN1, 0)
-
-	if checkError(err) {
-		return
+// releaseCoil releases coils
+func (mm *MrMiddle) releaseCoil() (err error) {
+	if err = pwmEnable(IN1, "0"); checkError(err) {
+		return wrapError(err)
 	}
 
-	err = mm.e.PwmWrite(IN2, 0)
+	if err = pwmEnable(IN2, "0"); checkError(err) {
+		return wrapError(err)
+	}
 
-	if checkError(err) {
-		return
+	if err = mm.e.PwmWrite(IN1, 0); checkError(err) {
+		return wrapError(err)
+	}
+	if err = mm.e.PwmWrite(IN2, 0); checkError(err) {
+		return wrapError(err)
 	}
 
 	return
@@ -97,7 +93,7 @@ func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration, pd Pole) (err erro
 		return
 	}
 
-	err = mm.DriveCoil(pd)
+	err = mm.driveCoil(pd)
 
 	if checkError(err) {
 		return
@@ -105,7 +101,7 @@ func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration, pd Pole) (err erro
 
 	time.Sleep(ms)
 
-	err = mm.ReleaseCoil()
+	err = mm.releaseCoil()
 
 	if checkError(err) {
 		return
