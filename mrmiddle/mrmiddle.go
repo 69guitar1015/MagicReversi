@@ -90,8 +90,7 @@ func (mm *MrMiddle) Init() (err error) {
 	if err = export(IN1); checkError(err) {
 		// return wrapError(err)
 	}
-
-	if export(IN2); checkError(err) {
+	if err = export(IN2); checkError(err) {
 		// return wrapError(err)
 	}
 
