@@ -84,7 +84,13 @@ func y2AddrAndGpio(y int) (addr int, gpio int) {
 
 // Init is initialization function of MrMiddle
 func (mm *MrMiddle) Init() (err error) {
-	log.Println("initialize circuit...")
+	log.Println("Initialize circuit...")
+
+	err = mm.ReleaseCoil()
+
+	if checkError(err) {
+		return wrapError(err)
+	}
 
 	for _, addr := range EXIA {
 		mm.e.I2cStart(addr)
@@ -102,6 +108,7 @@ func (mm *MrMiddle) Init() (err error) {
 		if checkError(err) {
 			return wrapError(err)
 		}
+
 		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF})
 
 		if checkError(err) {
@@ -132,7 +139,32 @@ func (mm *MrMiddle) Init() (err error) {
 		}
 	}
 
-	mm.writeAllLow()
+	err = mm.writeAllLow()
+
+	if checkError(err) {
+		return wrapError(err)
+	}
+
+	return
+}
+
+// Finalize execute finalizing process
+func (mm *MrMiddle) Finalize() (err error) {
+	fmt.Println("Finalize...")
+	err = mm.ReleaseCoil()
+	if checkError(err) {
+		return wrapError(err)
+	}
+
+	err = mm.writeAllLow()
+	if checkError(err) {
+		return wrapError(err)
+	}
+
+	err = mm.e.Finalize()
+	if checkError(err) {
+		return wrapError(err)
+	}
 
 	return
 }

@@ -42,25 +42,25 @@ func (mm *MrMiddle) writeAllLow() (err error) {
 func (mm *MrMiddle) DriveCoil(pd Pole) (err error) {
 	switch pd {
 	case N:
-		err = mm.e.DigitalWrite(IN1, 1)
+		err = mm.e.PwmWrite(IN2, 0)
 
 		if checkError(err) {
 			return
 		}
 
-		err = mm.e.DigitalWrite(IN2, 0)
+		err = mm.e.PwmWrite(IN1, PWMLEVEL)
 
 		if checkError(err) {
 			return
 		}
 	case S:
-		err = mm.e.DigitalWrite(IN1, 0)
+		err = mm.e.PwmWrite(IN1, 0)
 
 		if checkError(err) {
 			return
 		}
 
-		err = mm.e.DigitalWrite(IN2, 1)
+		err = mm.e.PwmWrite(IN2, PWMLEVEL)
 
 		if checkError(err) {
 			return
@@ -72,13 +72,13 @@ func (mm *MrMiddle) DriveCoil(pd Pole) (err error) {
 
 // ReleaseCoil releases coils
 func (mm *MrMiddle) ReleaseCoil() (err error) {
-	err = mm.e.DigitalWrite(IN1, 0)
+	err = mm.e.PwmWrite(IN1, 0)
 
 	if checkError(err) {
 		return
 	}
 
-	err = mm.e.DigitalWrite(IN2, 0)
+	err = mm.e.PwmWrite(IN2, 0)
 
 	if checkError(err) {
 		return
