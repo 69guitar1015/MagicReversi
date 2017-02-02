@@ -6,9 +6,7 @@ import "time"
 func (mm *MrMiddle) writeByte(y int, v byte) (err error) {
 	addr, gpio := y2AddrAndGpio(y - 1)
 
-	err = mm.e.I2cStart(addr)
-
-	if checkError(err) {
+	if err = mm.e.I2cStart(addr); checkError(err) {
 		return
 	}
 
@@ -17,20 +15,13 @@ func (mm *MrMiddle) writeByte(y int, v byte) (err error) {
 	}
 
 	data := []byte{byte(gpio), v}
-	err = mm.e.I2cWrite(addr, data)
 
-	if checkError(err) {
-		return
-	}
-
-	return
+	return mm.e.I2cWrite(addr, data)
 }
 
 func (mm *MrMiddle) writeAllLow() (err error) {
 	for y := 0; y < 8; y++ {
-		err = mm.writeByte(y, 0x00)
-
-		if checkError(err) {
+		if err = mm.writeByte(y, 0x00); checkError(err) {
 			return
 		}
 	}
@@ -87,33 +78,21 @@ func (mm *MrMiddle) releaseCoil() (err error) {
 func (mm *MrMiddle) highWhile(x int, y int, ms time.Duration, pd Pole) (err error) {
 	bits := byte(0x01 << uint(x-1))
 
-	err = mm.writeByte(y, bits)
-
-	if checkError(err) {
+	if err = mm.writeByte(y, bits); checkError(err) {
 		return
 	}
 
-	err = mm.driveCoil(pd)
-
-	if checkError(err) {
+	if err = mm.driveCoil(pd); checkError(err) {
 		return
 	}
 
 	time.Sleep(ms)
 
-	err = mm.releaseCoil()
-
-	if checkError(err) {
+	if err = mm.releaseCoil(); checkError(err) {
 		return
 	}
 
-	err = mm.writeByte(y, 0x00)
-
-	if checkError(err) {
-		return
-	}
-
-	return
+	return mm.writeByte(y, 0x00)
 }
 
 // Flip flips a stone at (x, y)
