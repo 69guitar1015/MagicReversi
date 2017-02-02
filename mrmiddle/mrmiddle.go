@@ -82,33 +82,9 @@ func y2AddrAndGpio(y int) (addr int, gpio int) {
 	return
 }
 
-// On turn on the circuit
-func (mm *MrMiddle) On() (err error) {
-	err = mm.e.DigitalWrite(VCC, 1)
-	return
-}
-
-// Off turn off the circuit
-func (mm *MrMiddle) Off() (err error) {
-	err = mm.e.DigitalWrite(VCC, 0)
-	return
-}
-
 // Init is initialization function of MrMiddle
 func (mm *MrMiddle) Init() (err error) {
 	log.Println("initialize circuit...")
-
-	mm.On()
-
-	err = mm.e.DigitalWrite(IN1, 0)
-	if checkError(err) {
-		return wrapError(err)
-	}
-
-	err = mm.e.DigitalWrite(IN2, 0)
-	if checkError(err) {
-		return wrapError(err)
-	}
 
 	for _, addr := range EXIA {
 		mm.e.I2cStart(addr)
