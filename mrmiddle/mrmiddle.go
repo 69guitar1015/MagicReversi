@@ -3,6 +3,7 @@ package mrmiddle
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"gobot.io/x/gobot/platforms/intel-iot/edison"
 )
@@ -86,7 +87,7 @@ func y2AddrAndGpio(y int) (addr int, gpio int) {
 func (mm *MrMiddle) Init() (err error) {
 	log.Println("Initialize circuit...")
 
-	err = mm.ReleaseCoil()
+	err = mm.releaseCoil()
 
 	if checkError(err) {
 		return wrapError(err)
@@ -151,10 +152,12 @@ func (mm *MrMiddle) Init() (err error) {
 // Finalize execute finalizing process
 func (mm *MrMiddle) Finalize() (err error) {
 	fmt.Println("Finalize...")
-	err = mm.ReleaseCoil()
+	err = mm.releaseCoil()
 	if checkError(err) {
 		return wrapError(err)
 	}
+
+	time.Sleep(100 * time.Millisecond)
 
 	err = mm.writeAllLow()
 	if checkError(err) {

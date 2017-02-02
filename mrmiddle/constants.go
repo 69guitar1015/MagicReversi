@@ -66,7 +66,7 @@ const (
 	// IN1 is IN1 pin
 	IN1 = "6"
 	// IN2 is IN2 pin
-	IN2 = "5"
+	IN2 = "9"
 	// PWMLEVEL is output level by using pwm
 	PWMLEVEL = 128
 )
