@@ -82,30 +82,12 @@ func y2AddrAndGpio(y int) (addr int, gpio int) {
 	return
 }
 
-// On turn on the circuit
-func (mm *MrMiddle) On() (err error) {
-	err = mm.e.DigitalWrite(VCC, 1)
-	return
-}
-
-// Off turn off the circuit
-func (mm *MrMiddle) Off() (err error) {
-	err = mm.e.DigitalWrite(VCC, 0)
-	return
-}
-
 // Init is initialization function of MrMiddle
 func (mm *MrMiddle) Init() (err error) {
-	log.Println("initialize circuit...")
+	log.Println("Initialize circuit...")
 
-	mm.On()
+	err = mm.ReleaseCoil()
 
-	err = mm.e.DigitalWrite(IN1, 0)
-	if checkError(err) {
-		return wrapError(err)
-	}
-
-	err = mm.e.DigitalWrite(IN2, 0)
 	if checkError(err) {
 		return wrapError(err)
 	}
@@ -126,6 +108,7 @@ func (mm *MrMiddle) Init() (err error) {
 		if checkError(err) {
 			return wrapError(err)
 		}
+
 		err = mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF})
 
 		if checkError(err) {
@@ -156,7 +139,32 @@ func (mm *MrMiddle) Init() (err error) {
 		}
 	}
 
-	mm.writeAllLow()
+	err = mm.writeAllLow()
+
+	if checkError(err) {
+		return wrapError(err)
+	}
+
+	return
+}
+
+// Finalize execute finalizing process
+func (mm *MrMiddle) Finalize() (err error) {
+	fmt.Println("Finalize...")
+	err = mm.ReleaseCoil()
+	if checkError(err) {
+		return wrapError(err)
+	}
+
+	err = mm.writeAllLow()
+	if checkError(err) {
+		return wrapError(err)
+	}
+
+	err = mm.e.Finalize()
+	if checkError(err) {
+		return wrapError(err)
+	}
 
 	return
 }
