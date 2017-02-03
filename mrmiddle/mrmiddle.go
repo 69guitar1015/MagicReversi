@@ -204,5 +204,8 @@ func (mm *MrMiddle) GotThem() (err error) {
 	err = mm.driveCoil(S)
 	time.Sleep(3 * time.Second)
 
+	err = mm.releaseCoil()
+	time.Sleep(3 * time.Second)
+
 	return
 }

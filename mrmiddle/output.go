@@ -1,6 +1,9 @@
 package mrmiddle
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // write byte data to designated line
 func (mm *MrMiddle) writeByte(y int, v byte) (err error) {
@@ -56,21 +59,27 @@ func (mm *MrMiddle) driveCoil(pd Pole) (err error) {
 
 // releaseCoil releases coils
 func (mm *MrMiddle) releaseCoil() (err error) {
+	fmt.Println("1ばん")
 	if err = pwmEnable(IN1, "0"); checkError(err) {
 		return wrapError(err)
 	}
 
+	fmt.Println("2ばん")
 	if err = pwmEnable(IN2, "0"); checkError(err) {
 		return wrapError(err)
 	}
 
+	fmt.Println("3ばん")
 	if err = writeDuty(IN1, 0); checkError(err) {
 		return wrapError(err)
 	}
 
+	fmt.Println("4ばん")
 	if err = writeDuty(IN2, 0); checkError(err) {
 		return wrapError(err)
 	}
+
+	fmt.Println("5ばん")
 
 	return
 }

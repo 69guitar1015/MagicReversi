@@ -40,9 +40,14 @@ func main() {
 
 	err = m.Init()
 
+	fmt.Println(err)
+
 	// checkError(err, m)
 
 	m.GotThem()
+
+	err = m.Finalize()
+	fmt.Println(err)
 
 	return
 
