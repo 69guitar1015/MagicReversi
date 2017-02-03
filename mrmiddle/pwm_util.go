@@ -2,9 +2,19 @@ package mrmiddle
 
 import (
 	"os"
+	"strconv"
 
 	"gobot.io/x/gobot/sysfs"
 )
+
+// changePinMode writes pin mode to current_pinmux file
+func changePinMode(pin, mode string) (err error) {
+	_, err = writeSysfsFile(
+		"/sys/kernel/debug/gpio_debug/gpio"+pin+"/current_pinmux",
+		[]byte("mode"+mode),
+	)
+	return
+}
 
 // pwmPath returns pwm base path
 func pwmPath() string {
@@ -51,8 +61,8 @@ func pwmEnable(pin string, val string) (err error) {
 }
 
 // writeDuty writes value to pwm duty cycle path
-func writeDuty(pin string, duty string) (err error) {
-	_, err = writeSysfsFile(pwmDutyCyclePath(pin2pwmpin(pin)), []byte(duty))
+func writeDuty(pin string, duty int) (err error) {
+	_, err = writeSysfsFile(pwmDutyCyclePath(pin2pwmpin(pin)), []byte(strconv.Itoa(duty)))
 	return
 }
 
@@ -70,4 +80,20 @@ func unexport(pin string) (err error) {
 
 func pin2pwmpin(pin string) string {
 	return map[string]string{"3": "0", "5": "1", "6": "2", "9": "3"}[pin]
+}
+
+func pin2syspin(pin string) string {
+	return map[string]string{"3": "12", "5": "13", "6": "182", "9": "183"}[pin]
+}
+
+func pwmInit(mm *MrMiddle, pin string) (err error) {
+	if err = mm.e.DigitalWrite(pin, 1); err != nil {
+		return
+	}
+
+	if err = changePinMode(pin2syspin(pin), "1"); err != nil {
+		return
+	}
+
+	return export(pin)
 }

@@ -33,7 +33,7 @@ func (mm *MrMiddle) writeAllLow() (err error) {
 func (mm *MrMiddle) driveCoil(pd Pole) (err error) {
 	switch pd {
 	case N:
-		if err = mm.e.PwmWrite(IN1, PWMLEVEL); checkError(err) {
+		if err = writeDuty(IN1, PWMLEVEL); checkError(err) {
 			return wrapError(err)
 		}
 
@@ -42,7 +42,7 @@ func (mm *MrMiddle) driveCoil(pd Pole) (err error) {
 		}
 
 	case S:
-		if err = mm.e.PwmWrite(IN2, PWMLEVEL); checkError(err) {
+		if err = writeDuty(IN2, PWMLEVEL); checkError(err) {
 			return wrapError(err)
 		}
 
@@ -64,10 +64,11 @@ func (mm *MrMiddle) releaseCoil() (err error) {
 		return wrapError(err)
 	}
 
-	if err = mm.e.PwmWrite(IN1, 0); checkError(err) {
+	if err = writeDuty(IN1, 0); checkError(err) {
 		return wrapError(err)
 	}
-	if err = mm.e.PwmWrite(IN2, 0); checkError(err) {
+
+	if err = writeDuty(IN2, 0); checkError(err) {
 		return wrapError(err)
 	}
 

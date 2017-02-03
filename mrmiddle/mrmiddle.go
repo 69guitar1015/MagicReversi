@@ -89,11 +89,11 @@ func y2AddrAndGpio(y int) (addr int, gpio int) {
 func (mm *MrMiddle) Init() (err error) {
 	log.Println("Initialize circuit...")
 
-	if e := export(IN1); checkError(e) {
+	if e := pwmInit(mm, IN1); checkError(e) {
 		err = multierror.Append(err, wrapError(e))
 	}
 
-	if e := export(IN2); checkError(e) {
+	if e := pwmInit(mm, IN2); checkError(e) {
 		err = multierror.Append(err, wrapError(e))
 	}
 
@@ -152,6 +152,14 @@ func (mm *MrMiddle) Finalize() (err error) {
 	}
 
 	time.Sleep(100 * time.Millisecond)
+
+	if e := unexport(IN1); checkError(e) {
+		err = multierror.Append(err, wrapError(e))
+	}
+
+	if e := unexport(IN2); checkError(e) {
+		err = multierror.Append(err, wrapError(e))
+	}
 
 	if e := mm.writeAllLow(); checkError(e) {
 		err = multierror.Append(err, wrapError(e))
