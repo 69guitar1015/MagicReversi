@@ -67,8 +67,10 @@ const (
 	IN1 = "6"
 	// IN2 is IN2 pin
 	IN2 = "9"
+	// PERIOD is output level by using pwm
+	PERIOD = 65536
 	// PWMLEVEL is output level by using pwm
-	PWMLEVEL = 2000000
+	PWMLEVEL = 32768
 )
 
 //
@@ -79,7 +81,7 @@ const (
 	POLLTIME = 200 * time.Millisecond
 
 	// FLIPTIME is the time of output for flip
-	FLIPTIME = 500 * time.Millisecond
+	FLIPTIME = 1000 * time.Millisecond
 )
 
 // Pole represents magnetic poll direction

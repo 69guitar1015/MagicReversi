@@ -60,6 +60,12 @@ func pwmEnable(pin string, val string) (err error) {
 	return
 }
 
+// writeDuty writes value to pwm period path
+func writePeriod(pin string, period int) (err error) {
+	_, err = writeSysfsFile(pwmPeriodPath(pin2pwmpin(pin)), []byte(strconv.Itoa(period)))
+	return
+}
+
 // writeDuty writes value to pwm duty cycle path
 func writeDuty(pin string, duty int) (err error) {
 	_, err = writeSysfsFile(pwmDutyCyclePath(pin2pwmpin(pin)), []byte(strconv.Itoa(duty)))
@@ -95,5 +101,20 @@ func pwmInit(mm *MrMiddle, pin string) (err error) {
 		return
 	}
 
-	return export(pin)
+	// don't care resource busy error
+	export(pin)
+
+	if err = pwmEnable(pin, "0"); err != nil {
+		return
+	}
+
+	if err = writePeriod(pin, PERIOD); err != nil {
+		return
+	}
+
+	if err = writeDuty(pin, PWMLEVEL); err != nil {
+		return
+	}
+
+	return
 }
