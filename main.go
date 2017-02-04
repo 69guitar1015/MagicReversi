@@ -68,7 +68,8 @@ func main() {
 			pd = mrmiddle.S
 		}
 
-		m.Flip(x, y, pd)
+		err := m.Flip(x, y, pd)
+		log.Println(err)
 		// p := s[i]
 
 		// fmt.Println(p)
