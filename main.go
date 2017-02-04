@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/69guitar1015/MagicReversi/mrmiddle"
 )
@@ -42,14 +41,7 @@ func main() {
 
 	fmt.Println(err)
 
-	// checkError(err, m)
-
-	m.GotThem()
-
-	err = m.Finalize()
-	fmt.Println(err)
-
-	return
+	checkError(err, m)
 
 	// for i := 0; i < 20; i++ {
 	// 	err = m.GotThem(byte(12 * i))
@@ -61,26 +53,37 @@ func main() {
 	// m.Finalize()
 	// checkError(err, m)
 
-	i := 0
-	s := [][]int{[]int{3, 4}, []int{4, 4}, []int{5, 4}, []int{6, 4}, []int{6, 5}, []int{5, 5}, []int{4, 5}, []int{3, 5}}
+	/////
+	// i := 0
+	// s := [][]int{[]int{3, 4}, []int{4, 4}, []int{5, 4}, []int{6, 4}, []int{6, 5}, []int{5, 5}, []int{4, 5}, []int{3, 5}}
 	pd := mrmiddle.N
 
 	for {
-		p := s[i]
+		var x, y, d int
+		fmt.Scan(&x, &y, &d)
 
-		fmt.Println(p)
-
-		m.Flip(p[0], p[1], pd)
-
-		i = (i + 1) % len(s)
-		if i == 0 {
-			if pd == mrmiddle.N {
-				pd = mrmiddle.S
-			} else {
-				pd = mrmiddle.N
-			}
+		if d == 0 {
+			pd = mrmiddle.N
+		} else {
+			pd = mrmiddle.S
 		}
 
-		time.Sleep(300 * time.Millisecond)
+		m.Flip(x, y, pd)
+		// p := s[i]
+
+		// fmt.Println(p)
+		//
+		// m.Flip(p[0], p[1], pd)
+		//
+		// i = (i + 1) % len(s)
+		// if i == 0 {
+		// 	if pd == mrmiddle.N {
+		// 		pd = mrmiddle.S
+		// 	} else {
+		// 		pd = mrmiddle.N
+		// 	}
+		// }
+
+		// time.Sleep(300 * time.Millisecond)
 	}
 }
