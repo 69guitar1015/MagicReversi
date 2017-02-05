@@ -117,6 +117,14 @@ func (mm *MrMiddle) Init() (err error) {
 		if e := mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF}); checkError(e) {
 			err = multierror.Append(err, wrapError(e))
 		}
+
+		if e := mm.e.I2cWrite(addr, []byte{IPOLA, 0xFF}); checkError(e) {
+			err = multierror.Append(err, wrapError(e))
+		}
+
+		if e := mm.e.I2cWrite(addr, []byte{IPOLB, 0xFF}); checkError(e) {
+			err = multierror.Append(err, wrapError(e))
+		}
 	}
 
 	for _, addr := range EXOA {
