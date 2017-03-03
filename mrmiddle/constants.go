@@ -68,9 +68,9 @@ const (
 	// IN2 is IN2 pin
 	IN2 = "9"
 	// PERIOD is output level by using pwm
-	PERIOD = 65536
+	PERIOD = 54613
 	// PWMLEVEL is output level by using pwm
-	PWMLEVEL = 32768
+	PWMLEVEL = 45000 + 9613
 )
 
 //

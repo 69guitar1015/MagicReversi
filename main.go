@@ -41,7 +41,7 @@ func main() {
 
 	fmt.Println(err)
 
-	checkError(err, m)
+	// checkError(err, m)
 
 	// for i := 0; i < 20; i++ {
 	// 	err = m.GotThem(byte(12 * i))
@@ -58,33 +58,30 @@ func main() {
 	// s := [][]int{[]int{3, 4}, []int{4, 4}, []int{5, 4}, []int{6, 4}, []int{6, 5}, []int{5, 5}, []int{4, 5}, []int{3, 5}}
 	pd := mrmiddle.N
 
-	for {
-		var x, y, d int
-		fmt.Scan(&x, &y, &d)
+	var mode string
+	fmt.Println("modeを入れてくれ[input / output]")
+	fmt.Scan(&mode)
 
-		if d == 0 {
-			pd = mrmiddle.N
-		} else {
-			pd = mrmiddle.S
+	switch mode {
+	case "input":
+		for {
+			m.GetInput()
 		}
 
-		err := m.Flip(x, y, pd)
-		log.Println(err)
-		// p := s[i]
+	case "output":
+		for {
+			fmt.Println("x y 磁力の方向(0/1)\nを入力してくれ")
+			var x, y, d int
+			fmt.Scan(&x, &y, &d)
 
-		// fmt.Println(p)
-		//
-		// m.Flip(p[0], p[1], pd)
-		//
-		// i = (i + 1) % len(s)
-		// if i == 0 {
-		// 	if pd == mrmiddle.N {
-		// 		pd = mrmiddle.S
-		// 	} else {
-		// 		pd = mrmiddle.N
-		// 	}
-		// }
+			if d == 0 {
+				pd = mrmiddle.N
+			} else {
+				pd = mrmiddle.S
+			}
 
-		// time.Sleep(300 * time.Millisecond)
+			err := m.Flip(x, y, pd)
+			log.Println(err)
+		}
 	}
 }

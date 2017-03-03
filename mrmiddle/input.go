@@ -1,6 +1,9 @@
 package mrmiddle
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // read given y line
 func (mm *MrMiddle) readLine(y int) (r row, err error) {
@@ -68,14 +71,26 @@ func (mm *MrMiddle) GetInput() (int, int, error) {
 	old, err := mm.readWholeBoard()
 
 	if checkError(err) {
-		return 0, 0, wrapError(err)
+		//return 0, 0, wrapError(err)
 	}
 
 	for {
 		crr, err := mm.readWholeBoard()
 
+		fmt.Println("")
+		for _, r := range crr {
+			for _, v := range r {
+				if v {
+					fmt.Printf("\t○")
+				} else {
+					fmt.Printf("\t×")
+				}
+			}
+			fmt.Println("")
+		}
+
 		if checkError(err) {
-			return 0, 0, wrapError(err)
+			// return 0, 0, wrapError(err)
 		}
 
 		if crr != old {

@@ -57,17 +57,35 @@ func (mm *MrMiddle) driveCoil(pd Pole) (err error) {
 	return
 }
 
-// releaseCoil releases coils
-func (mm *MrMiddle) releaseCoil() (err error) {
-	fmt.Println("1ばん")
-	if err = pwmEnable(IN1, "0"); checkError(err) {
-		return wrapError(err)
+// driveCoil drives coils as given pole direction
+func (mm *MrMiddle) ochitukeCoil(pd Pole) (err error) {
+	fmt.Println("落ち着け")
+	switch pd {
+	case N:
+
+		if err = writeDuty(IN1, 0); checkError(err) {
+			return wrapError(err)
+		}
+
+		if err = pwmEnable(IN1, "0"); checkError(err) {
+			return wrapError(err)
+		}
+
+	case S:
+		if err = writeDuty(IN2, 0); checkError(err) {
+			return wrapError(err)
+		}
+
+		if err = pwmEnable(IN2, "0"); checkError(err) {
+			return wrapError(err)
+		}
 	}
 
-	fmt.Println("2ばん")
-	if err = pwmEnable(IN2, "0"); checkError(err) {
-		return wrapError(err)
-	}
+	return
+}
+
+// releaseCoil releases coils
+func (mm *MrMiddle) releaseCoil() (err error) {
 
 	fmt.Println("3ばん")
 	if err = writeDuty(IN1, 0); checkError(err) {
@@ -76,6 +94,15 @@ func (mm *MrMiddle) releaseCoil() (err error) {
 
 	fmt.Println("4ばん")
 	if err = writeDuty(IN2, 0); checkError(err) {
+		return wrapError(err)
+	}
+	fmt.Println("1ばん")
+	if err = pwmEnable(IN1, "0"); checkError(err) {
+		return wrapError(err)
+	}
+
+	fmt.Println("2ばん")
+	if err = pwmEnable(IN2, "0"); checkError(err) {
 		return wrapError(err)
 	}
 
@@ -98,7 +125,7 @@ func (mm *MrMiddle) HighWhile(x int, y int, ms time.Duration, pd Pole) (err erro
 
 	time.Sleep(ms)
 
-	if err = mm.releaseCoil(); checkError(err) {
+	if err = mm.ochitukeCoil(pd); checkError(err) {
 		return
 	}
 

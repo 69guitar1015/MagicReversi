@@ -102,6 +102,7 @@ func (mm *MrMiddle) Init() (err error) {
 	}
 
 	for _, addr := range EXIA {
+		fmt.Println(addr)
 		mm.e.I2cStart(addr)
 
 		//　Initialize IOCON
@@ -128,6 +129,7 @@ func (mm *MrMiddle) Init() (err error) {
 	}
 
 	for _, addr := range EXOA {
+		fmt.Println(addr)
 		mm.e.I2cStart(addr)
 
 		//　Initialize IOCON
@@ -208,4 +210,15 @@ func (mm *MrMiddle) GotThem() (err error) {
 	time.Sleep(3 * time.Second)
 
 	return
+}
+
+func (mm *MrMiddle) LetsPwm() {
+	clock := time.Tick(8 * time.Millisecond)
+	sw := byte(1)
+	for {
+		<-clock
+
+		mm.e.DigitalWrite("13", sw)
+		sw = 1 - sw
+	}
 }
