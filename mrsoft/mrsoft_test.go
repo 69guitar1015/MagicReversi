@@ -18,7 +18,6 @@ type dammyMiddleware struct {
 
 func (m *dammyMiddleware) Init() (err error) {
 	fmt.Println("Initializing...")
-
 	return
 }
 

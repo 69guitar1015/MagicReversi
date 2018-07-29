@@ -3,179 +3,237 @@ package mrmiddle
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
-	multierror "github.com/hashicorp/go-multierror"
-
-	"gobot.io/x/gobot/platforms/intel-iot/edison"
+	"gobot.io/x/gobot/drivers/gpio"
+	"gobot.io/x/gobot/drivers/i2c"
+	"gobot.io/x/gobot/platforms/raspi"
 )
-
-// MrMiddle is Magic Reversi's middle ware object
-type MrMiddle struct {
-	e *edison.Adaptor
-}
-
-// NewMrMiddle returns MrMiddle instance
-func NewMrMiddle() (mm *MrMiddle, err error) {
-	mm = &MrMiddle{}
-
-	mm.e = edison.NewAdaptor()
-
-	err = mm.e.Connect()
-
-	if checkError(err) {
-		return nil, wrapError(err)
-	}
-
-	return
-}
-
-type row [8]bool
-
-func (r row) reversed() (reversed row) {
-	for i, v := range r {
-		reversed[len(reversed)-i-1] = v
-	}
-
-	return
-}
-
-func (r row) toByte() (b byte) {
-	b = 0
-
-	for i, v := range r {
-		if v {
-			b += 0x01 << uint(i)
-		}
-	}
-
-	return
-}
-
-func checkError(err error) bool {
-	return err != nil
-}
 
 func wrapError(err error) error {
 	return fmt.Errorf("Middleware Error: %s", err)
 }
 
-// convert from byte object to boolean array
-func byte2Row(b byte) (r row) {
-	for i := 0; i < 8; i++ {
-		r[i] = (b&0x01 == 0x01)
-		b >>= 1
-	}
+// Pole is a representation of a polar direction N and S
+// constant variable N and S are defined in constants.go
+type Pole int
 
-	return
+// MotorState is motor driver state
+type MotorState [2]int
+
+// position represents a expander pin belonging to MrMiddle
+type position struct {
+	i    uint8
+	port string
+	pin  uint8
 }
 
-// take y and returns the Expander's address and gpio from [GPIOA, GPIOB]
-func y2AddrAndGpio(y int) (addr int, gpio int) {
-	// Expander address
-	addr = EXOA[int(y/2)]
+// MrMiddle is Magic Reversi's middle ware object
+type MrMiddle struct {
+	master    *raspi.Adaptor
+	expanders [8]*i2c.MCP23017Driver
+	motorPin  [2]*gpio.DirectPinDriver
+	readMap   [8][8]position
+	writeMap  [8][8]position
+}
 
-	// Use GPIO B when y is odd number
-	gpio = GPIOA
+// NewMrMiddle returns MrMiddle instance
+func NewMrMiddle() (mm *MrMiddle, err error) {
+	mm = &MrMiddle{}
+	mm.master = raspi.NewAdaptor()
 
-	if y%2 != 0 {
-		gpio = GPIOB
+	// IO expanders
+	for i := range mm.expanders {
+		mm.expanders[i] = i2c.NewMCP23017Driver(
+			mm.master,
+			i2c.WithBus(0),
+			i2c.WithAddress(0x20+i),
+			i2c.WithMCP23017Bank(0),
+			i2c.WithMCP23017Mirror(0),
+			i2c.WithMCP23017Seqop(0),
+			i2c.WithMCP23017Disslw(0),
+			i2c.WithMCP23017Haen(0),
+			i2c.WithMCP23017Odr(0),
+			i2c.WithMCP23017Intpol(0),
+		)
 	}
+
+	for i := range mm.readMap {
+		for j := range mm.readMap[i] {
+			enc := ExpanderMap[i][j]
+			id, _ := strconv.Atoi(string(enc[0]))
+			readPort := string(enc[1])
+			readPin, _ := strconv.Atoi(string(enc[2]))
+			writePort := string(enc[3])
+			writePin, _ := strconv.Atoi(string(enc[4]))
+			mm.readMap[i][j] = position{uint8(id), readPort, uint8(readPin)}
+			mm.writeMap[i][j] = position{uint8(id), writePort, uint8(writePin)}
+		}
+	}
+
+	// Motor Driver
+	mm.motorPin[0] = gpio.NewDirectPinDriver(mm.master, MOTOR_PIN1)
+	mm.motorPin[1] = gpio.NewDirectPinDriver(mm.master, MOTOR_PIN2)
 
 	return
 }
 
 // Init is initialization function of MrMiddle
-func (mm *MrMiddle) Init() (err error) {
+func (mm *MrMiddle) Init() error {
 	log.Println("Initialize circuit...")
 
-	if e := pwmInit(mm, IN1); checkError(e) {
-		err = multierror.Append(err, wrapError(e))
+	// Raspberry pi zero W
+	if err := mm.master.Connect(); err != nil {
+		return wrapError(err)
 	}
 
-	if e := pwmInit(mm, IN2); checkError(e) {
-		err = multierror.Append(err, wrapError(e))
+	// Motor driver
+	if err := mm.setMotorState(MOTOR_STOP); err != nil {
+		return wrapError(err)
 	}
 
-	if e := mm.releaseCoil(); checkError(e) {
-		err = multierror.Append(err, wrapError(e))
+	// I/O Expander
+	for _, exp := range mm.expanders {
+		exp.Start()
 	}
 
-	for _, addr := range EXIA {
-		mm.e.I2cStart(addr)
-
-		//　Initialize IOCON
-		if e := mm.e.I2cWrite(addr, []byte{IOCON, 0x00}); checkError(e) {
-			err = multierror.Append(err, wrapError(e))
-		}
-
-		// Initialize IODIR as read
-		if e := mm.e.I2cWrite(addr, []byte{IODIRA, 0xFF}); checkError(e) {
-			err = multierror.Append(err, wrapError(e))
-		}
-
-		if e := mm.e.I2cWrite(addr, []byte{IODIRB, 0xFF}); checkError(e) {
-			err = multierror.Append(err, wrapError(e))
-		}
-
-		if e := mm.e.I2cWrite(addr, []byte{IPOLA, 0xFF}); checkError(e) {
-			err = multierror.Append(err, wrapError(e))
-		}
-
-		if e := mm.e.I2cWrite(addr, []byte{IPOLB, 0xFF}); checkError(e) {
-			err = multierror.Append(err, wrapError(e))
-		}
+	if err := mm.writeAllLow(); err != nil {
+		return wrapError(err)
 	}
 
-	for _, addr := range EXOA {
-		mm.e.I2cStart(addr)
-
-		//　Initialize IOCON
-		if e := mm.e.I2cWrite(addr, []byte{IOCON, 0x00}); checkError(e) {
-			err = multierror.Append(err, wrapError(e))
-		}
-
-		// Initialize IODIR as write
-		if e := mm.e.I2cWrite(addr, []byte{IODIRA, 0x00}); checkError(e) {
-			err = multierror.Append(err, wrapError(e))
-		}
-
-		if e := mm.e.I2cWrite(addr, []byte{IODIRB, 0x00}); checkError(e) {
-			err = multierror.Append(err, wrapError(e))
-		}
-	}
-
-	if e := mm.writeAllLow(); checkError(e) {
-		err = multierror.Append(err, wrapError(e))
-	}
-
-	return
+	return nil
 }
 
 // Finalize execute finalizing process
 func (mm *MrMiddle) Finalize() (err error) {
 	fmt.Println("Finalize...")
-	if e := mm.releaseCoil(); checkError(e) {
-		err = multierror.Append(err, wrapError(e))
+
+	// Stop motor
+	if err := mm.setMotorState(MOTOR_STOP); err != nil {
+		return err
 	}
 
-	time.Sleep(100 * time.Millisecond)
-
-	if e := unexport(IN1); checkError(e) {
-		err = multierror.Append(err, wrapError(e))
+	// Shut all gates
+	if err := mm.writeAllLow(); err != nil {
+		return err
 	}
 
-	if e := unexport(IN2); checkError(e) {
-		err = multierror.Append(err, wrapError(e))
-	}
-
-	if e := mm.writeAllLow(); checkError(e) {
-		err = multierror.Append(err, wrapError(e))
-	}
-
-	if e := mm.e.Finalize(); checkError(e) {
-		err = multierror.Append(err, wrapError(e))
+	// Finalize master
+	if err := mm.master.Finalize(); err != nil {
+		return err
 	}
 
 	return
+}
+
+/*
+	Output function
+*/
+
+// set motor driver state
+func (mm *MrMiddle) setMotorState(state MotorState) error {
+	for i := 0; i < 2; i++ {
+		err := mm.motorPin[i].DigitalWrite(byte(state[i]))
+		if err != nil {
+			return wrapError(err)
+		}
+	}
+	return nil
+}
+
+// write `val` at `pos`
+func (mm *MrMiddle) writeAt(pos position, val uint8) error {
+	err := mm.expanders[pos.i].WriteGPIO(pos.pin, val, pos.port)
+	return wrapError(err)
+}
+
+func (mm *MrMiddle) writeAllLow() error {
+	for i := range mm.writeMap {
+		for j := range mm.writeMap[i] {
+			pos := mm.writeMap[i][j]
+			err := mm.writeAt(pos, 0)
+			if err != nil {
+				return wrapError(err)
+			}
+		}
+	}
+	return nil
+}
+
+// Flip outputs at (i, j) cell in `TIMING_FLIP` time
+func (mm *MrMiddle) Flip(i int, j int, pole Pole) error {
+	// Open the gate at (i, j)
+	if err := mm.writeAt(mm.writeMap[i][j], 1); err != nil {
+		return wrapError(err)
+	}
+
+	// Turn on the motor driver, direction is `Pole`
+	if err := mm.setMotorState(MOTOR_DRIVE[pole]); err != nil {
+		return wrapError(err)
+	}
+
+	// Wait
+	time.Sleep(TIMING_FLIP)
+
+	// Turn off
+	if err := mm.setMotorState(MOTOR_STOP); err != nil {
+		return wrapError(err)
+	}
+
+	// Close the gate at (i, j)
+	if err := mm.writeAt(mm.writeMap[i][j], 0); err != nil {
+		return wrapError(err)
+	}
+
+	return nil
+}
+
+/*
+  Input function
+*/
+
+func (mm *MrMiddle) readAt(pos position) (uint8, error) {
+	val, err := mm.expanders[pos.i].ReadGPIO(pos.pin, pos.port)
+	return val, wrapError(err)
+}
+
+func (mm *MrMiddle) readBoard() (board [8][8]uint8, err error) {
+	for i := range mm.readMap {
+		for j := range mm.readMap[i] {
+			val, err := mm.readAt(mm.readMap[i][j])
+			if err != nil {
+				return [8][8]uint8{}, err
+			}
+
+			board[i][j] = val
+		}
+	}
+	return
+}
+
+func (mm *MrMiddle) GetInput() (int, int, error) {
+	old, err := mm.readBoard()
+	if err != nil {
+		return -1, -1, err
+	}
+
+	for {
+		// wait
+		time.Sleep(TIMING_POLL)
+
+		crr, err := mm.readBoard()
+		if err != nil {
+			return -1, -1, err
+		}
+
+		for i := range crr {
+			for j := range crr[i] {
+				if old[i][j] == 0 && crr[i][j] == 1 {
+					return i, j, nil
+				}
+			}
+		}
+	}
+	return -1, -1, nil
 }

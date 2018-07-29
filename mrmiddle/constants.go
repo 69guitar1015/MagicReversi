@@ -2,95 +2,46 @@ package mrmiddle
 
 import "time"
 
-//
-//	IO EXPANDER CONFIGS
-//
-const (
-	// IODIRA is 0x00
-	IODIRA = 0x00 + iota
-	// IODIRB is 0x01
-	IODIRB
-	// IPOLA is 0x02
-	IPOLA
-	// IPOLB is 0x03
-	IPOLB
-	// GPINTENA is 0x04
-	GPINTENA
-	// GPINTENB is 0x05
-	GPINTENB
-	// DEFVALA is 0x06
-	DEFVALA
-	// DEFVALB is 0x07
-	DEFVALB
-	// INTCONA is 0x08
-	INTCONA
-	// INTCONB is 0x09
-	INTCONB
-	// IOCON is 0x0A
-	IOCON
-	// IOCON2 is 0x0B
-	IOCON2
-	// GPPUA is 0x0C
-	GPPUA
-	// GPPUB is 0x0D
-	GPPUB
-	// INTFA is 0x0E
-	INTFA
-	// INTFB is 0x0F
-	INTFB
-	// INTCAPA is 0x10
-	INTCAPA
-	// INTCAPB is 0x11
-	INTCAPB
-	// GPIOA is 0x12
-	GPIOA
-	// GPIOB is 0x13
-	GPIOB
-	// OLATA is 0x14
-	OLATA
-	// OLATB is 0x15
-	OLATB
-)
-
-// EXIA is I/O expander address for read
-var EXIA = [4]int{0x20, 0x21, 0x22, 0x23}
-
-// EXOA is I/O expander address for write
-var EXOA = [4]int{0x24, 0x25, 0x26, 0x27}
-
-//
-//	Driver IC CONFIGS
-//
-
-const (
-	// IN1 is IN1 pin
-	IN1 = "6"
-	// IN2 is IN2 pin
-	IN2 = "9"
-	// PERIOD is output level by using pwm
-	PERIOD = 65536
-	// PWMLEVEL is output level by using pwm
-	PWMLEVEL = 32768
-)
-
-//
-//	GENERAL CONFIGS
-//
+// Timing
 const (
 	// POLLTIME is board polling interval time
-	POLLTIME = 200 * time.Millisecond
+	TIMING_POLL = 200 * time.Millisecond
 
 	// FLIPTIME is the time of output for flip
-	FLIPTIME = 1000 * time.Millisecond
+	TIMING_FLIP = 500 * time.Millisecond
 )
 
-// Pole represents magnetic poll direction
-// N = 1 and S = -1
-type Pole int
-
+// Pole direction
 const (
 	// N pole
 	N Pole = 1
 	// S pole
 	S Pole = -1
 )
+
+// Mapping list to map board cell to expander pin
+// format: [expander id][input port][input pin][output port][]
+var ExpanderMap = [8][8]string{
+	[8]string{"0A0A1", "0A2A3", "0A4A5", "0A6A7", "1A0A1", "1A2A3", "1A4A5", "1A6A7"},
+	[8]string{"0B0B1", "0B2B3", "0B4B5", "0B6B7", "1B0B1", "1B2B3", "1B4B5", "1B6B7"},
+	[8]string{"2A0A1", "2A2A3", "2A4A5", "2A6A7", "3A0A1", "3A2A3", "3A4A5", "3A6A7"},
+	[8]string{"2B0B1", "2B2B3", "2B4B5", "2B6B7", "3B0B1", "3B2B3", "3B4B5", "3B6B7"},
+	[8]string{"4A0A1", "4A2A3", "4A4A5", "4A6A7", "5A0A1", "5A2A3", "5A4A5", "5A6A7"},
+	[8]string{"4B0B1", "4B2B3", "4B4B5", "4B6B7", "5B0B1", "5B2B3", "5B4B5", "5B6B7"},
+	[8]string{"6A0A1", "6A2A3", "6A4A5", "6A6A7", "7A0A1", "7A2A3", "7A4A5", "7A6A7"},
+	[8]string{"6B0B1", "6B2B3", "6B4B5", "6B6B7", "7B0B1", "7B2B3", "7B4B5", "7B6B7"},
+}
+
+// Motor pin assignment
+const (
+	MOTOR_PIN1 = "17"
+	MOTOR_PIN2 = "18"
+)
+
+// Motor driver function state
+var MOTOR_STOP = MotorState{0, 0}
+var MOTOR_BRAKE = MotorState{1, 1}
+var MOTOR_DRIVE = map[Pole]MotorState{
+	N: MotorState{1, 0},
+	S: MotorState{0, 1},
+}
