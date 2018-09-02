@@ -20,7 +20,7 @@ const (
 )
 
 // Mapping list to map board cell to expander pin
-// format: [expander id][input port][input pin][output port][]
+// format: [expander id][input port][input pin][output port][output pin]
 var ExpanderMap = [8][8]string{
 	[8]string{"0A0A1", "0A2A3", "0A4A5", "0A6A7", "1A0A1", "1A2A3", "1A4A5", "1A6A7"},
 	[8]string{"0B0B1", "0B2B3", "0B4B5", "0B6B7", "1B0B1", "1B2B3", "1B4B5", "1B6B7"},
@@ -31,6 +31,12 @@ var ExpanderMap = [8][8]string{
 	[8]string{"6A0A1", "6A2A3", "6A4A5", "6A6A7", "7A0A1", "7A2A3", "7A4A5", "7A6A7"},
 	[8]string{"6B0B1", "6B2B3", "6B4B5", "6B6B7", "7B0B1", "7B2B3", "7B4B5", "7B6B7"},
 }
+
+// For debug
+// var ExpanderMap = [][]string{
+// 	[]string{"0A0A1", "0A2A3", "0A4A5", "0A6A7"},
+// 	[]string{"0B0B1", "0B2B3", "0B4B5", "0B6B7"},
+// }
 
 // Motor pin assignment
 const (

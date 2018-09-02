@@ -56,6 +56,12 @@ type MrMiddle struct {
 	motorPin  [2]*gpio.DirectPinDriver
 	readMap   [8][8]position
 	writeMap  [8][8]position
+
+	// For debug
+	// expanders [1]*i2c.MCP23017Driver
+	// motorPin  [2]*gpio.DirectPinDriver
+	// readMap   [2][4]position
+	// writeMap  [2][4]position
 }
 
 // NewMrMiddle returns MrMiddle instance
@@ -67,7 +73,7 @@ func NewMrMiddle() (mm *MrMiddle, err error) {
 	for i := range mm.expanders {
 		mm.expanders[i] = i2c.NewMCP23017Driver(
 			mm.master,
-			i2c.WithBus(0),
+			i2c.WithBus(1),
 			i2c.WithAddress(0x20+i),
 			i2c.WithMCP23017Bank(0),
 			i2c.WithMCP23017Mirror(0),
