@@ -29,6 +29,20 @@ type position struct {
 	pin  uint8
 }
 
+type Board [2][4]uint8
+
+func (b *Board) Print() {
+	fmt.Println("-----------------------------------------")
+	for i := range *b {
+		fmt.Printf("|")
+		for j := range (*b)[i] {
+			fmt.Printf("\t%v", (*b)[i][j])
+		}
+		fmt.Printf("\t|\n")
+	}
+	fmt.Println("-----------------------------------------")
+}
+
 // MrMiddle is Magic Reversi's middle ware object
 type MrMiddle struct {
 	master    *raspi.Adaptor
@@ -198,12 +212,12 @@ func (mm *MrMiddle) readAt(pos position) (uint8, error) {
 	return val, wrapError(err)
 }
 
-func (mm *MrMiddle) readBoard() (board [8][8]uint8, err error) {
+func (mm *MrMiddle) readBoard() (board Board, err error) {
 	for i := range mm.readMap {
 		for j := range mm.readMap[i] {
 			val, err := mm.readAt(mm.readMap[i][j])
 			if err != nil {
-				return [8][8]uint8{}, err
+				return Board{}, err
 			}
 
 			board[i][j] = val
