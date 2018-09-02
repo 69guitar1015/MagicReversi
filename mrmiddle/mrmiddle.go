@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"gobot.io/x/gobot/drivers/gpio"
@@ -12,7 +13,12 @@ import (
 )
 
 func wrapError(err error) error {
-	return fmt.Errorf("Middleware Error: %s", err)
+	prefix := "Middleware Error"
+	if strings.HasPrefix(err.Error(), prefix) {
+		return err
+	}
+
+	return fmt.Errorf("%s: %s", prefix, err)
 }
 
 // Pole is a representation of a polar direction N and S
@@ -159,7 +165,10 @@ func (mm *MrMiddle) setMotorState(state MotorState) error {
 // write `val` at `pos`
 func (mm *MrMiddle) writeAt(pos position, val uint8) error {
 	err := mm.expanders[pos.i].WriteGPIO(pos.pin, val, pos.port)
-	return wrapError(err)
+	if err != nil {
+		return wrapError(err)
+	}
+	return nil
 }
 
 func (mm *MrMiddle) writeAllLow() error {
@@ -209,7 +218,10 @@ func (mm *MrMiddle) Flip(i int, j int, pole Pole) error {
 
 func (mm *MrMiddle) readAt(pos position) (uint8, error) {
 	val, err := mm.expanders[pos.i].ReadGPIO(pos.pin, pos.port)
-	return val, wrapError(err)
+	if err != nil {
+		return 0, wrapError(err)
+	}
+	return val, nil
 }
 
 func (mm *MrMiddle) readBoard() (board Board, err error) {
