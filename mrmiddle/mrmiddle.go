@@ -267,5 +267,4 @@ func (mm *MrMiddle) GetInput() (int, int, error) {
 			}
 		}
 	}
-	return -1, -1, nil
 }

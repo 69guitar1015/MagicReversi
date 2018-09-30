@@ -40,8 +40,8 @@ var ExpanderMap = [8][8]string{
 
 // Motor pin assignment
 const (
-	MOTOR_PIN1 = "17"
-	MOTOR_PIN2 = "18"
+	MOTOR_PIN1 = "11"
+	MOTOR_PIN2 = "12"
 )
 
 // Motor driver function state
