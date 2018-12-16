@@ -26,11 +26,13 @@ func main() {
 
 	// Finalizing processing when termination signal comes
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan,
+	signal.Notify(
+		signalChan,
 		syscall.SIGHUP,
 		syscall.SIGINT,
 		syscall.SIGTERM,
-		syscall.SIGQUIT)
+		syscall.SIGQUIT,
+	)
 
 	go func() {
 		<-signalChan

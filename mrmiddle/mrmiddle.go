@@ -35,8 +35,10 @@ type position struct {
 	pin  uint8
 }
 
-type Board [2][4]uint8
+// Board represents board status
+type Board [8][8]int8
 
+// Print prints board status
 func (b *Board) Print() {
 	fmt.Println("-----------------------------------------")
 	for i := range *b {
@@ -172,7 +174,8 @@ func (mm *MrMiddle) setMotorState(state MotorState) error {
 func (mm *MrMiddle) writeAt(pos position, val uint8) error {
 	err := mm.expanders[pos.i].WriteGPIO(pos.pin, val, pos.port)
 	if err != nil {
-		return wrapError(err)
+		// return wrapError(err)
+		fmt.Println(pos, err)
 	}
 	return nil
 }
@@ -230,22 +233,25 @@ func (mm *MrMiddle) readAt(pos position) (uint8, error) {
 	return val, nil
 }
 
-func (mm *MrMiddle) readBoard() (board Board, err error) {
+// ReadBoard reads current board status
+func (mm *MrMiddle) ReadBoard() (board Board, err error) {
 	for i := range mm.readMap {
 		for j := range mm.readMap[i] {
 			val, err := mm.readAt(mm.readMap[i][j])
-			if err != nil {
-				return Board{}, err
-			}
 
-			board[i][j] = val
+			if err != nil {
+				board[i][j] = -1
+			} else {
+				board[i][j] = int8(val)
+			}
 		}
 	}
 	return
 }
 
+// GetInput watches board status and returns point when it changes
 func (mm *MrMiddle) GetInput() (int, int, error) {
-	old, err := mm.readBoard()
+	old, err := mm.ReadBoard()
 	if err != nil {
 		return -1, -1, err
 	}
@@ -254,7 +260,7 @@ func (mm *MrMiddle) GetInput() (int, int, error) {
 		// wait
 		time.Sleep(TIMING_POLL)
 
-		crr, err := mm.readBoard()
+		crr, err := mm.ReadBoard()
 		if err != nil {
 			return -1, -1, err
 		}
