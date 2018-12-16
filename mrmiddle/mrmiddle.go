@@ -248,29 +248,3 @@ func (mm *MrMiddle) ReadBoard() (board Board, err error) {
 	}
 	return
 }
-
-// GetInput watches board status and returns point when it changes
-func (mm *MrMiddle) GetInput() (int, int, error) {
-	old, err := mm.ReadBoard()
-	if err != nil {
-		return -1, -1, err
-	}
-
-	for {
-		// wait
-		time.Sleep(TIMING_POLL)
-
-		crr, err := mm.ReadBoard()
-		if err != nil {
-			return -1, -1, err
-		}
-
-		for i := range crr {
-			for j := range crr[i] {
-				if old[i][j] == 0 && crr[i][j] == 1 {
-					return i, j, nil
-				}
-			}
-		}
-	}
-}
