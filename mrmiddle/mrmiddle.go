@@ -194,7 +194,7 @@ func (mm *MrMiddle) writeAllLow() error {
 }
 
 // Flip outputs at (i, j) cell in `TIMING_FLIP` time
-func (mm *MrMiddle) Flip(i int, j int, pole Pole) error {
+func (mm *MrMiddle) Flip(i uint8, j uint8, pole Pole) error {
 	// Open the gate at (i, j)
 	if err := mm.writeAt(mm.writeMap[i][j], 1); err != nil {
 		return wrapError(err)
