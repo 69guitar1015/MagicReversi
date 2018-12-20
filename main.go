@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	TIMING_POLL = 100
+	TIMING_POLL = 50
 )
 
 func checkError(err error) {
@@ -118,6 +118,7 @@ func main() {
 
 	// Do notify
 	go func() {
+		// TODO: チャタリング制御
 		old, err := m.ReadBoard()
 		if err != nil {
 			log.Println(err)
