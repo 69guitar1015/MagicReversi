@@ -95,6 +95,7 @@ func NewMrMiddle() (mm *MrMiddle, err error) {
 			readPin, _ := strconv.Atoi(string(enc[2]))
 			writePort := string(enc[3])
 			writePin, _ := strconv.Atoi(string(enc[4]))
+
 			mm.readMap[i][j] = position{uint8(id), readPort, uint8(readPin)}
 			mm.writeMap[i][j] = position{uint8(id), writePort, uint8(writePin)}
 		}
@@ -176,6 +177,8 @@ func (mm *MrMiddle) writeAt(pos position, val uint8) error {
 	if err != nil {
 		// return wrapError(err)
 		fmt.Println(pos, err)
+	} else {
+		fmt.Println(pos)
 	}
 	return nil
 }

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -84,7 +86,7 @@ func (p *ErrorPayload) Compose() []byte {
 	return jsonBytes
 }
 
-func main() {
+func start() {
 	m, err := mrmiddle.NewMrMiddle()
 	checkError(err)
 
@@ -148,4 +150,64 @@ func main() {
 	bt.Launch(flipHandle, getBoardHandle, notify_chan)
 
 	select {}
+}
+
+func debug() {
+	fmt.Println("debug mode!")
+	m, err := mrmiddle.NewMrMiddle()
+	checkError(err)
+
+	defer m.Finalize()
+	reserveFinalizeWhenExited(m)
+
+	err = m.Init()
+	checkError(err)
+
+	// read input
+	stdin := bufio.NewScanner(os.Stdin)
+
+	for {
+		fmt.Printf("i : ")
+		stdin.Scan()
+		i, _ := strconv.Atoi(stdin.Text())
+
+		fmt.Printf("j : ")
+		stdin.Scan()
+		j, _ := strconv.Atoi(stdin.Text())
+
+		fmt.Printf("Pole : ")
+		stdin.Scan()
+		text := stdin.Text()
+
+		switch text {
+		case "N":
+			m.Flip(uint8(i), uint8(j), mrmiddle.N)
+		case "S":
+			m.Flip(uint8(i), uint8(j), mrmiddle.S)
+		default:
+			fmt.Println("Invalid input: ", text)
+		}
+	}
+}
+
+func help() {
+	fmt.Println("Valid command is {start, debug}")
+}
+
+func main() {
+	if len(os.Args) != 2 {
+		help()
+		os.Exit(0)
+	}
+
+	command := os.Args[1]
+
+	switch command {
+	case "start":
+		start()
+	case "debug":
+		debug()
+	default:
+		help()
+	}
 }
