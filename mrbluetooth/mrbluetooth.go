@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/paypal/gatt"
 	"github.com/paypal/gatt/examples/service"
@@ -38,17 +39,38 @@ type Payload interface {
 	Compose() []byte
 }
 
+// FlipEvent represents a flip event
+type FlipEvent struct {
+	X    uint8
+	Y    uint8
+	Pole int
+}
+
 // FlipRequest is schema of payload for flip action
 type FlipRequest struct {
-	Seq []struct {
-		X    uint8 `json:"x"`
-		Y    uint8 `json:"y"`
-		Pole int   `json:"pole"`
-	} `json:"seq"`
-	Interval uint32 `json:"interval"` // in milli seconds
+	Seq      []FlipEvent
+	Interval time.Duration
 }
 
 func (f *FlipRequest) Parse(data []byte) error {
+	/*
+		Flip Protocol
+		| interval (8bit) | padding(1bit) pole(1bit) x(3bit)  y(3bit) | … |
+		First 1 byte means interval time (10msec) between flips
+	*/
+
+	f.Interval = time.Duration(data[0]) * 10 * time.Millisecond
+	f.Seq = []FlipEvent{}
+
+	for _, b := range data[1:] {
+
+		f.Seq = append(f.Seq, FlipEvent{
+			Pole: int(0x40&b) >> 6,
+			X:    uint8(0x38&b) >> 3,
+			Y:    uint8(0x07&b) >> 0,
+		})
+	}
+
 	err := json.Unmarshal(data, f)
 	if err != nil {
 		return err
@@ -85,8 +107,14 @@ func NewMagicReversiService(
 
 	s.AddCharacteristic(gatt.MustParseUUID("183600AD-A496-46A1-95D2-79B4D1673DB1")).HandleReadFunc(
 		func(rsp gatt.ResponseWriter, req *gatt.ReadRequest) {
+
 			payload := GetBoardHandle()
-			rsp.Write(payload.Compose())
+			c := payload.Compose()
+			_, err := rsp.Write(c)
+
+			if err != nil {
+				log.Println("error: ", err)
+			}
 			return
 		})
 	return s
@@ -120,8 +148,12 @@ func (*MrBluetooth) Launch(
 	}
 
 	d.Handle(
-		gatt.CentralConnected(func(c gatt.Central) { log.Println("Connect: ", c.ID()) }),
-		gatt.CentralDisconnected(func(c gatt.Central) { log.Println("Disconnect: ", c.ID()) }),
+		gatt.CentralConnected(func(c gatt.Central) {
+			log.Printf("info: Connect: %s, MTU: %d", c.ID(), c.MTU())
+		}),
+		gatt.CentralDisconnected(func(c gatt.Central) {
+			log.Println("Disconnect: ", c.ID())
+		}),
 	)
 
 	onStateChanged := func(d gatt.Device, s gatt.State) {

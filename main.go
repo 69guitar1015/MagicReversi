@@ -2,89 +2,21 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 	"time"
 
 	mrbt "github.com/69guitar1015/MagicReversi/mrbluetooth"
 	"github.com/69guitar1015/MagicReversi/mrmiddle"
+	"github.com/comail/colog"
 )
 
 const (
 	TIMING_POLL = 50
 )
-
-func checkError(err error) {
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-}
-
-func reserveFinalizeWhenExited(f interface {
-	Finalize() error
-}) {
-	// Finalizing processing when termination signal comes
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(
-		signalChan,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT,
-	)
-	go func() {
-		<-signalChan
-		fmt.Println("Terminated...")
-		f.Finalize()
-		os.Exit(1)
-	}()
-}
-
-type GetBoardPayload struct {
-	board mrmiddle.Board `json:"board"`
-}
-
-func (p *GetBoardPayload) Compose() []byte {
-	jsonBytes, err := json.Marshal(*p)
-	if err != nil {
-		fmt.Println("JSON Marshal error:", err)
-		return nil
-	}
-	return jsonBytes
-}
-
-type NotifyPayload struct {
-	x uint8 `json:"x"`
-	y uint8 `json:"y"`
-}
-
-func (p *NotifyPayload) Compose() []byte {
-	jsonBytes, err := json.Marshal(*p)
-	if err != nil {
-		fmt.Println("JSON Marshal error:", err)
-		return nil
-	}
-	return jsonBytes
-}
-
-type ErrorPayload struct {
-	err string `json:error`
-}
-
-func (p *ErrorPayload) Compose() []byte {
-	jsonBytes, err := json.Marshal(*p)
-	if err != nil {
-		fmt.Println("JSON Marshal error:", err)
-		return nil
-	}
-	return jsonBytes
-}
 
 func start() {
 	m, err := mrmiddle.NewMrMiddle()
@@ -99,7 +31,7 @@ func start() {
 	flipHandle := func(req mrbt.FlipRequest) {
 		for _, r := range req.Seq {
 			m.Flip(r.Y, r.X, mrmiddle.Pole(r.Pole))
-			time.Sleep(time.Duration(req.Interval) * time.Millisecond)
+			time.Sleep(req.Interval)
 		}
 	}
 
@@ -107,7 +39,7 @@ func start() {
 		board, err := m.ReadBoard()
 
 		if err != nil {
-			log.Println(err)
+			log.Println("error: ", err)
 			return &ErrorPayload{"Error!"}
 		}
 
@@ -152,8 +84,7 @@ func start() {
 	select {}
 }
 
-func debug() {
-	fmt.Println("debug mode!")
+func flip_debug() {
 	m, err := mrmiddle.NewMrMiddle()
 	checkError(err)
 
@@ -190,11 +121,58 @@ func debug() {
 	}
 }
 
+func read_debug() {
+	m, err := mrmiddle.NewMrMiddle()
+	checkError(err)
+
+	defer m.Finalize()
+	reserveFinalizeWhenExited(m)
+
+	err = m.Init()
+	checkError(err)
+
+	for {
+		b, err := m.ReadBoard()
+		checkError(err)
+
+		b.Print()
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
+func json_debug() {
+	m, err := mrmiddle.NewMrMiddle()
+	checkError(err)
+
+	defer m.Finalize()
+	reserveFinalizeWhenExited(m)
+
+	err = m.Init()
+	checkError(err)
+
+	board, err := m.ReadBoard()
+
+	var payload mrbt.Payload
+	if err != nil {
+		log.Println("error: ", err)
+		payload = &ErrorPayload{"Error!"}
+	} else {
+		payload = &GetBoardPayload{board: board}
+	}
+
+	c := payload.Compose()
+	fmt.Println(string(c))
+}
+
 func help() {
 	fmt.Println("Valid command is {start, debug}")
 }
 
 func main() {
+	colog.Register()
+	colog.SetFlags(log.Ldate | log.Lshortfile)
+	colog.SetMinLevel(colog.LDebug)
+
 	if len(os.Args) != 2 {
 		help()
 		os.Exit(0)
@@ -206,7 +184,11 @@ func main() {
 	case "start":
 		start()
 	case "debug":
-		debug()
+		fmt.Println(rand.Int63())
+
+		colog.SetMinLevel(colog.LDebug)
+		fmt.Println("debug: Debug mode!")
+		json_debug()
 	default:
 		help()
 	}

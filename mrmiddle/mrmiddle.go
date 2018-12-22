@@ -68,10 +68,13 @@ type MrMiddle struct {
 
 // NewMrMiddle returns MrMiddle instance
 func NewMrMiddle() (mm *MrMiddle, err error) {
+	log.Println("debug: Prepare MrMiddle object")
 	mm = &MrMiddle{}
+
+	log.Println("debug: Prepare raspberry pi driver")
 	mm.master = raspi.NewAdaptor()
 
-	// IO expanders
+	log.Println("Prepare I/O Expanders' drivers")
 	for i := range mm.expanders {
 		mm.expanders[i] = i2c.NewMCP23017Driver(
 			mm.master,
@@ -87,6 +90,7 @@ func NewMrMiddle() (mm *MrMiddle, err error) {
 		)
 	}
 
+	log.Println("debug: Apply expanders' gpio mappings")
 	for i := range mm.readMap {
 		for j := range mm.readMap[i] {
 			enc := ExpanderMap[i][j]
@@ -101,7 +105,7 @@ func NewMrMiddle() (mm *MrMiddle, err error) {
 		}
 	}
 
-	// Motor Driver
+	log.Println("debug: Prepare motor pin drivers")
 	mm.motorPin[0] = gpio.NewDirectPinDriver(mm.master, MOTOR_PIN1)
 	mm.motorPin[1] = gpio.NewDirectPinDriver(mm.master, MOTOR_PIN2)
 
@@ -110,45 +114,42 @@ func NewMrMiddle() (mm *MrMiddle, err error) {
 
 // Init is initialization function of MrMiddle
 func (mm *MrMiddle) Init() error {
-	log.Println("Initialize circuit...")
+	log.Println("info: Initialize circuit...")
 
-	// Raspberry pi zero W
+	log.Println("debug: Connect")
 	if err := mm.master.Connect(); err != nil {
 		return wrapError(err)
 	}
 
-	// Motor driver
+	log.Println("debug: Stop motor")
 	if err := mm.setMotorState(MOTOR_STOP); err != nil {
 		return wrapError(err)
 	}
 
-	// I/O Expander
+	log.Println("debug: Connect to I/O Expanders")
 	for _, exp := range mm.expanders {
 		exp.Start()
 	}
 
-	if err := mm.writeAllLow(); err != nil {
-		return wrapError(err)
-	}
+	log.Println("debug: Set all expanders' gpio low")
+	mm.writeAllLow()
 
 	return nil
 }
 
 // Finalize execute finalizing process
 func (mm *MrMiddle) Finalize() (err error) {
-	fmt.Println("Finalize...")
+	log.Println("info: Finalize...")
 
-	// Stop motor
+	log.Println("debug: Set motor state STOP")
 	if err := mm.setMotorState(MOTOR_STOP); err != nil {
 		return err
 	}
 
-	// Shut all gates
-	if err := mm.writeAllLow(); err != nil {
-		return err
-	}
+	log.Println("debug: Set all expanders' gpio low")
+	mm.writeAllLow()
 
-	// Finalize master
+	log.Println("debug: Finalize master")
 	if err := mm.master.Finalize(); err != nil {
 		return err
 	}
@@ -175,31 +176,30 @@ func (mm *MrMiddle) setMotorState(state MotorState) error {
 func (mm *MrMiddle) writeAt(pos position, val uint8) error {
 	err := mm.expanders[pos.i].WriteGPIO(pos.pin, val, pos.port)
 	if err != nil {
-		// return wrapError(err)
-		fmt.Println(pos, err)
-	} else {
-		fmt.Println(pos)
+		return err
 	}
+
 	return nil
 }
 
-func (mm *MrMiddle) writeAllLow() error {
+func (mm *MrMiddle) writeAllLow() {
 	for i := range mm.writeMap {
 		for j := range mm.writeMap[i] {
 			pos := mm.writeMap[i][j]
 			err := mm.writeAt(pos, 0)
+
 			if err != nil {
-				return wrapError(err)
+				log.Println("error: write at", pos, err)
 			}
 		}
 	}
-	return nil
 }
 
 // Flip outputs at (i, j) cell in `TIMING_FLIP` time
 func (mm *MrMiddle) Flip(i uint8, j uint8, pole Pole) error {
 	// Open the gate at (i, j)
 	if err := mm.writeAt(mm.writeMap[i][j], 1); err != nil {
+		log.Printf("error: write at (%d,%d) / %v\n", i, j, err)
 		return wrapError(err)
 	}
 
@@ -243,6 +243,7 @@ func (mm *MrMiddle) ReadBoard() (board Board, err error) {
 			val, err := mm.readAt(mm.readMap[i][j])
 
 			if err != nil {
+				log.Printf("error: read error at (%d, %d) / %v\n", i, j, err)
 				board[i][j] = -1
 			} else {
 				board[i][j] = int8(val)

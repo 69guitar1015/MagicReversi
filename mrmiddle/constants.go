@@ -4,9 +4,6 @@ import "time"
 
 // Timing
 const (
-	// POLLTIME is board polling interval time
-	TIMING_POLL = 200 * time.Millisecond
-
 	// FLIPTIME is the time of output for flip
 	TIMING_FLIP = 1000 * time.Millisecond
 )
@@ -40,8 +37,8 @@ var ExpanderMap = [8][8]string{
 
 // Motor pin assignment
 const (
-	MOTOR_PIN1 = "8"
-	MOTOR_PIN2 = "10"
+	MOTOR_PIN1 = "16"
+	MOTOR_PIN2 = "18"
 )
 
 // Motor driver function state
